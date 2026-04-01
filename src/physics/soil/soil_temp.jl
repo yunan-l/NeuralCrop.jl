@@ -10,13 +10,13 @@ function soiltemp_lag!(soil::Soil,
     soil_diffus = (soil.tdiff_15 - soil.tdiff_0) ./ 0.15f0 * 0.03f0 + soil.tdiff_0
     soil_alag = DEPTH ./ sqrt.(soil_diffus * DIFFUS_CONV ./ HALF_OMEGA)
 
-    backend = get_backend(climbuf.atemp_mean)
+    backend = KernelAbstractions.get_backend(climbuf.atemp_mean)
 
     kernel = soiltemp_lag_kernel!(backend)
 
     kernel(climbuf.temp, climbuf.atemp_mean, soil_alag, soil.w, soil.temp, a, b, ndrange=length(climbuf.atemp_mean))
 
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
 
 end
 
@@ -61,13 +61,13 @@ function linreg(climbuf_temp::AbstractArray{M},
     a = device(zeros(Float32, size(climbuf_temp, 2)))
     b = device(zeros(Float32, size(climbuf_temp, 2)))
 
-    backend = get_backend(climbuf_temp)
+    backend = KernelAbstractions.get_backend(climbuf_temp)
 
     kernel = linreg_kernel!(backend)
     
     kernel(climbuf_temp, a, b, ndrange=size(climbuf_temp, 2))
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
 
     return a, b
 

@@ -2,7 +2,7 @@ function infil_perc!(parm::LPJmLParam,
                      soil::Soil  
 )
 
-    backend = get_backend(soil.infil)
+    backend = KernelAbstractions.get_backend(soil.infil)
 
     kernel = infil_perc_kernel!(backend)
 
@@ -29,7 +29,7 @@ function infil_perc!(parm::LPJmLParam,
            ndrange=length(soil.infil)
     )
 
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
 
 end
 

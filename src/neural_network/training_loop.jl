@@ -1,3 +1,4 @@
+# space validation
 function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, data, train_i, valid_i, year, loss_func, opt_state, η_schedule, device, save_path; batch_size=10, N_epochs=1, scheduler_offset::Int=0, save_mode::Symbol=:valid)
     
     @assert save_mode in [:valid, :train] "save_mode has to be :valid or :train"
@@ -26,8 +27,12 @@ function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, 
             data_index = train_i[batch_i]
             data_batch = DataLoader(data, data_index, device)
             @unpack cft, lpjmlparam  = parameters
-            @unpack climate, lpjml, soilparam = data_batch
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
+            @unpack climate = data_batch
+
+            InitialData = InitilDataLoader(data_batch, data_index, device)
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, InitialData, length(data_index), device)
+            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
+            
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
             loss_trian_rollout = []
             for day in 1:rollout:365*year
@@ -58,8 +63,12 @@ function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, 
             data_index = valid_i[batch_i]
             data_batch = DataLoader(data, data_index, device)
             @unpack cft, lpjmlparam  = parameters
-            @unpack climate, lpjml, soilparam = data_batch
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
+            @unpack climate = data_batch
+
+            InitialData = InitilDataLoader(data_batch, data_index, device)
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, InitialData, length(data_index), device)
+            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
+            
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
             loss_valid_rollout = []
             for day in 1:rollout:365*year
@@ -104,7 +113,7 @@ function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, 
     
 end
 
-
+# space validation
 function train_loop_winter_wheat_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, data, train_i, valid_i, year, loss_func, opt_state, η_schedule, device, save_path; batch_size=10, N_epochs=1, scheduler_offset::Int=0, save_mode::Symbol=:valid)
     
     @assert save_mode in [:valid, :train] "save_mode has to be :valid or :train"
@@ -134,8 +143,12 @@ function train_loop_winter_wheat_rollout!(daily_crop, rollout, nn_model, ps, st,
             data_index = train_i[batch_i]
             data_batch = DataLoader_winter_wheat(data, data_index, device)
             @unpack cft, lpjmlparam  = parameters
-            @unpack climate, lpjml, soilparam = data_batch
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
+            @unpack climate = data_batch
+
+            InitialData = InitilDataLoader(data_batch, data_index, device)
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, InitialData, length(data_index), device)
+            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
+            
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
             loss_trian_rollout = []
             for day in 1:rollout:365*year
@@ -166,8 +179,11 @@ function train_loop_winter_wheat_rollout!(daily_crop, rollout, nn_model, ps, st,
             data_index = valid_i[batch_i]
             data_batch = DataLoader_winter_wheat(data, data_index, device)
             @unpack cft, lpjmlparam  = parameters
-            @unpack climate, lpjml, soilparam = data_batch
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
+            @unpack climate = data_batch
+
+            InitialData = InitilDataLoader(data_batch, data_index, device)
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, InitialData, length(data_index), device)
+            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
             loss_valid_rollout = []
             for day in 1:rollout:365*year
@@ -212,7 +228,9 @@ function train_loop_winter_wheat_rollout!(daily_crop, rollout, nn_model, ps, st,
     
 end
 
-function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, data, data_valid, train_i, valid_i, year, year_vaild, loss_func, opt_state, η_schedule, device, save_path; batch_size=10, batch_size_valid=10, N_epochs=1, scheduler_offset::Int=0, save_mode::Symbol=:valid)
+
+# time validation
+function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, data, data_valid, train_i, valid_i, year, year_valid, loss_func, opt_state, η_schedule, device, save_path; batch_size=10, batch_size_valid=10, N_epochs=1, scheduler_offset::Int=0, save_mode::Symbol=:valid)
     
     @assert save_mode in [:valid, :train] "save_mode has to be :valid or :train"
     
@@ -240,8 +258,11 @@ function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, 
             data_index = train_i[batch_i]
             data_batch = DataLoader(data, data_index, device)
             @unpack cft, lpjmlparam  = parameters
-            @unpack climate, lpjml, soilparam = data_batch
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
+            @unpack climate = data_batch
+
+            InitialData = InitilDataLoader(data_batch, data_index, device)
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, InitialData, length(data_index), device)
+            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
             loss_trian_rollout = []
             for day in 1:rollout:365*year
@@ -272,13 +293,17 @@ function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, 
             data_index = valid_i[batch_i]
             data_batch = DataLoader(data_valid, data_index, device)
             @unpack cft, lpjmlparam  = parameters
-            @unpack climate, lpjml, soilparam = data_batch
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
+            @unpack climate = data_batch
+
+            InitialData = InitilDataLoader(data_batch, data_index, device)
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, InitialData, length(data_index), device)
+            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
+            
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
             loss_valid_rollout = []
-            for day in 1:rollout:365*year_vaild
+            for day in 1:rollout:365*year_valid
                 day_start = day
-                day_end = min(day+rollout-1, 365*year_vaild)
+                day_end = min(day+rollout-1, 365*year_valid)
                 l = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, output, device)
                 push!(loss_valid_rollout, l)
             end
@@ -319,7 +344,8 @@ function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, 
 end
 
 
-function train_loop_winter_wheat_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, data, data_valid, train_i, valid_i, year, year_vaild, loss_func, opt_state, η_schedule, device, save_path; batch_size=10, batch_size_valid=10, N_epochs=1, scheduler_offset::Int=0, save_mode::Symbol=:valid)
+# time validation
+function train_loop_winter_wheat_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, data, data_valid, train_i, valid_i, year, year_valid, loss_func, opt_state, η_schedule, device, save_path; batch_size=10, batch_size_valid=10, N_epochs=1, scheduler_offset::Int=0, save_mode::Symbol=:valid)
     
     @assert save_mode in [:valid, :train] "save_mode has to be :valid or :train"
     
@@ -348,8 +374,12 @@ function train_loop_winter_wheat_rollout!(daily_crop, rollout, nn_model, ps, st,
             data_index = train_i[batch_i]
             data_batch = DataLoader_winter_wheat(data, data_index, device)
             @unpack cft, lpjmlparam  = parameters
-            @unpack climate, lpjml, soilparam = data_batch
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
+            @unpack climate = data_batch
+            
+            InitialData = InitilDataLoader(data_batch, data_index, device)
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, InitialData, length(data_index), device)
+            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
+            
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
             loss_trian_rollout = []
             for day in 1:rollout:365*year
@@ -381,12 +411,16 @@ function train_loop_winter_wheat_rollout!(daily_crop, rollout, nn_model, ps, st,
             data_batch = DataLoader_winter_wheat(data_valid, data_index, device)
             @unpack cft, lpjmlparam  = parameters
             @unpack climate, lpjml, soilparam = data_batch
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
+            
+            InitialData = InitilDataLoader(data_batch, data_index, device)
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, InitialData, length(data_index), device)
+            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, length(data_index), device)
+            
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
             loss_valid_rollout = []
-            for day in 1:rollout:365*year_vaild
+            for day in 1:rollout:365*year_valid
                 day_start = day
-                day_end = min(day+rollout-1, 365*year_vaild)
+                day_end = min(day+rollout-1, 365*year_valid)
                 l = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, output, device)
                 push!(loss_valid_rollout, l)
             end

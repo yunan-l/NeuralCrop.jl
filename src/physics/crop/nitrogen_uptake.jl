@@ -4,7 +4,7 @@ function nuptake_crop!(crop::Crop,
                        soil::Soil
 )
 
-    backend = get_backend(crop.nitrogen)
+    backend = KernelAbstractions.get_backend(crop.nitrogen)
 
     kernel = nuptake_crop_kernel!(backend)
     
@@ -28,7 +28,7 @@ function nuptake_crop!(crop::Crop,
            soil.temp,
            ndrange=length(crop.nitrogen))
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
   
 end
 

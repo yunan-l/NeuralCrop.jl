@@ -2,7 +2,7 @@ function lai_crop!(crop::Crop,
                    PFT::PftParameters
 )
 
-    backend = get_backend(crop.lai)
+    backend = KernelAbstractions.get_backend(crop.lai)
     
     kernel = lai_crop_kernel!(backend)
     
@@ -18,7 +18,7 @@ function lai_crop!(crop::Crop,
            ndrange=length(crop.lai)
            )
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
   
 end
 
@@ -66,13 +66,13 @@ function lai_deficit!(crop::Crop,
                       PFT::PftParameters
 )
 
-    backend = get_backend(crop.lai)
+    backend = KernelAbstractions.get_backend(crop.lai)
     
     kernel = lai_deficit_kernel!(backend)
     
     kernel(crop.senescence, crop.biomass, crop.rootc, crop.leafc, crop.lai, crop.lai_nppdeficit, crop.isgrowing, PFT, ndrange=length(crop.lai))
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
   
 end
 

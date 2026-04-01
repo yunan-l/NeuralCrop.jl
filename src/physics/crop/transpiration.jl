@@ -16,7 +16,7 @@ function transpiration!(photos_adtmm::AbstractArray{T},
     # demand = ifelse.(crop.gp .> 0, (1 .- crop.canopy_wet) .* pet.eeq * ALPHAM ./ (1 .+ (GM * ALPHAM) ./ crop.gp), zero(T))
     # transp = ifelse.(wr .> 0, min.(supply, demand) ./ wr .* fpc, zero(T)) # here the crop.fpc = 1, so we just omit it in the kernel fucntion
 
-    backend = get_backend(crop.gp)
+    backend = KernelAbstractions.get_backend(crop.gp)
 
     kernel = water_demand_supply_kernel!(backend)
     
@@ -38,7 +38,7 @@ function transpiration!(photos_adtmm::AbstractArray{T},
            wr, 
            ndrange=length(crop.gp))
 
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
 
 end
 

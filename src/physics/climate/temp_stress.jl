@@ -6,13 +6,13 @@ function temp_stress(PFT::PftParameters,
                      temp::AbstractArray{T}
 ) where {T <: AbstractFloat}
 
-    backend = get_backend(temp)
+    backend = KernelAbstractions.get_backend(temp)
     
     kernel = temp_stress_kernel!(backend)
     
     kernel(pet.daylength, temp, photos.tstress, k, photopar, PFT, ndrange=length(photos.tstress))
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
   
 end
 

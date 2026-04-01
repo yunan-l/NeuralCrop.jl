@@ -12,13 +12,13 @@ function petpar!(pet::PetPar,
     u = Float32.(sin.(deg2rad.(lat)) * sin(delta))
     v = Float32.(cos.(deg2rad.(lat)) * cos(delta))
     
-    backend = get_backend(lat)
+    backend = KernelAbstractions.get_backend(lat)
     
     kernel = daylength_kernel!(backend)
     
     kernel(pet.daylength, u, v, ndrange=length(lat))
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
     
     swnet = (1 .- pet.albedo) .* swdown
     

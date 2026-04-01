@@ -9,7 +9,7 @@ function phenology_crop!(crop::Crop,
 
     crop.harvesting0 .= crop.harvesting
 
-    backend = get_backend(temp)
+    backend = KernelAbstractions.get_backend(temp)
     
     kernel = phenology_kernel!(backend)
     
@@ -31,7 +31,7 @@ function phenology_crop!(crop::Crop,
            ndrange=length(climbuf_V_req)
     )
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
 
     lai_crop!(crop, PFT)
     

@@ -18,16 +18,16 @@ function nitrogen_transform!(soil::Soil,
     soil.NO3 .+= F_Nmineral * k_l
 
     # immobilization of N
-    backend = get_backend(soil.NH4)
+    backend = KernelAbstractions.get_backend(soil.NH4)
     kernel = immobilize_kernel!(backend)
     kernel(soil.NH4, soil.NO3, c_shift_fast, c_shift_slow, soil.layer_depth, parm, ndrange=size(soil.NH4, 1))
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
 
     # NO3 and N2O from nitrification
-    backend = get_backend(soil.NH4)
+    backend = KernelAbstractions.get_backend(soil.NH4)
     kernel = nitrify_kernel!(backend)
     kernel(soil.NH4, soil.NO3, soil.swc, soil.wsats, soil.temp, soil.ph, parm, ndrange=size(soil.NH4, 1))
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
 
 end
 

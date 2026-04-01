@@ -59,7 +59,7 @@ function update_lit_winter_wheat!(soil::Soil,
     hdate_callback = copy(crop_cal_hcallback)
 
     Zygote.ignore() do
-        backend = get_backend(hdate_callback)
+        backend = KernelAbstractions.get_backend(hdate_callback)
         kernel = update_lit_winter_wheat_kernel!(backend)
         kernel(crop_wtype,
                hdate,
@@ -67,7 +67,7 @@ function update_lit_winter_wheat!(soil::Soil,
                day,
                ndrange=length(hdate_callback)
         )
-        synchronize(backend)
+        KernelAbstractions.synchronize(backend)
     end
 
     soil.litc = soil.litc .* (1 .- reshape(hdate_callback, (1, :))) + litch .* reshape(hdate_callback, (1, :)) 

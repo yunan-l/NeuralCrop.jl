@@ -5,7 +5,7 @@ function evaporation!(pet_eeq::AbstractArray{T},
     
 ) where {T <: AbstractFloat}
 
-    backend = get_backend(pet_eeq)
+    backend = KernelAbstractions.get_backend(pet_eeq)
 
     kernel = evaporation_kernel!(backend)
     
@@ -22,7 +22,7 @@ function evaporation!(pet_eeq::AbstractArray{T},
            soil.layer_depth,
            ndrange=length(pet_eeq))
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
 
 end
 

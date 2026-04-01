@@ -6,7 +6,7 @@ function fertilizer!(param::LPJmLParam,
                      day
 )
 
-    backend = get_backend(crop.nfertilizer)
+    backend = KernelAbstractions.get_backend(crop.nfertilizer)
 
     kernel = fertilizer_kernel!(backend)
     
@@ -22,7 +22,7 @@ function fertilizer!(param::LPJmLParam,
            day,
            ndrange=length(crop.nfertilizer))
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
 
 end
 

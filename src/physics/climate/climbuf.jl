@@ -15,25 +15,25 @@ function annual_climbuf!(daily_temp::AbstractArray{T},
     
     monthlytemp!(daily_temp, climbuf.mtemp, device)
     
-    backend = get_backend(daily_temp)
+    backend = KernelAbstractions.get_backend(daily_temp)
 
     kernel = climbuf_mtemp20_kernel!(backend)
 
     kernel(climbuf.mtemp20, climbuf.mtemp, kk, ndrange=(size(climbuf.mtemp20, 1), size(climbuf.mtemp20, 2)))
 
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
     # climbuf.mtemp20 .= ifelse.(climbuf.mtemp20 .< -9998, climbuf.mtemp, (1 - kk) * climbuf.mtemp20 .+ kk * climbuf.mtemp)
     
     # getmintemp20_n!(climbuf, n)
     climbuf.min_temp .= sort(climbuf.mtemp20, dims=1)[1:n, :] # Array to store n coldest months
     
-    backend = get_backend(daily_temp)
+    backend = KernelAbstractions.get_backend(daily_temp)
 
     kernel = climbuf_V_req_a_kernel!(backend)
 
     kernel(climbuf.min_temp, climbuf.V_req_a, PFT, n, ndrange=length(climbuf.V_req_a))
 
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
     
     # for m = 1:n
     #     if climbuf.min_temp[m] <= PFT.tv_opt.low && climbuf.min_temp[m]> -9999
@@ -43,13 +43,13 @@ function annual_climbuf!(daily_temp::AbstractArray{T},
     #     end
     # end
     
-    backend = get_backend(daily_temp)
+    backend = KernelAbstractions.get_backend(daily_temp)
 
     kernel = climbuf_V_req_kernel!(backend)
 
     kernel(climbuf.V_req, climbuf.V_req_a, kk, ndrange=length(climbuf.V_req))
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
     # climbuf.V_req .= ifelse.(climbuf.V_req .< -9998, climbuf.V_req_a, (1 - kk) * climbuf.V_req .+ kk .* climbuf.V_req_a)
 
     climbuf.atemp_mean = vec(mean(daily_temp, dims = 1))
@@ -162,13 +162,13 @@ function monthlytemp!(daily_temp::AbstractArray{T},
 #         start_idx = end_idx + 1  # Update start index for the next month
 #     end
     
-    backend = get_backend(daily_temp)
+    backend = KernelAbstractions.get_backend(daily_temp)
     
     kernel = monthlytemp_kernel!(backend)
     
     kernel(daily_temp, climbuf_mtemp, ndaymonth, start_indices, ndrange=(size(ndaymonth, 1), size(climbuf_mtemp, 2)))
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
     
 end
 
@@ -198,13 +198,13 @@ function daily_climbuf!(temp::AbstractArray{T},
                         climbuf_temp::AbstractArray{T}
 ) where {T <: AbstractFloat}
 
-    backend = get_backend(temp)
+    backend = KernelAbstractions.get_backend(temp)
 
     kernel = daily_climbuf_kernel!(backend)
 
     kernel(temp, climbuf_temp, ndrange=length(temp))
 
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
 
 end
 

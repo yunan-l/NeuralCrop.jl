@@ -7,7 +7,7 @@ using DiffEqFlux, OrdinaryDiffEq, SciMLSensitivity, Statistics, LinearAlgebra, S
 import SciMLBase: solve, AbstractDEProblem
 
 # GPU PARALLEL
-import KernelAbstractions: @kernel, @index, @inbounds, get_backend, synchronize
+import KernelAbstractions: @kernel, @index, @inbounds # get_backend, synchronize
 using Lux, CUDA, LuxCUDA, Adapt
 
 # TRAINING
@@ -38,12 +38,12 @@ export annual_climbuf!, daily_climbuf!, infil_perc!, spin_up_climbuf!, update_cl
 export albedo!, petpar!, apar_crop!, apar_crop_maize!
 
 ### CROP
-export photosynthesis_C3!, photosynthesis_C4!, carbon_allocation!, respiration!, calculate_biomass
+export photosynthesis_C3!, photosynthesis_C4!, carbon_allocation!, respiration!
 export phenology_crop!, lai_crop!, lai_deficit!, cultivate!, harvest_crop!, fertilizer!
 export transpiration!, interception!
 export crop_nitrogen!, crop_nitrogen_old!, ndemand_crop!, nuptake_crop!
 export root_distribution, temp_stress
-export crop_carbon!, crop_carbon_old!, hybrid_photos_C3!, hybrid_photos_C4!
+export crop_carbon!, crop_carbon_node!, crop_carbon_hybrid!, hybrid_photos_C3!, hybrid_photos_C4!
 
 ### SOIL
 export soiltemp_lag!
@@ -95,6 +95,7 @@ include("physics/crop/cultivate.jl")
 include("physics/crop/phenology.jl")
 include("physics/crop/photosynthesis.jl")
 include("physics/crop/carbon_allocation.jl")
+include("physics/crop/crop_carbon.jl")
 include("physics/crop/lai_crop.jl")
 include("physics/crop/radiation.jl")
 include("physics/crop/albedo.jl")
@@ -113,6 +114,7 @@ include("physics/soil/evaporation.jl")
 include("physics/soil/soil_temp.jl")
 include("physics/soil/nitrogen_transform.jl")
 include("physics/soil/infil_perc.jl")
+include("physics/soil/soil_water.jl")
 
 # Hybrid
 include("hybrid/crop_carbon.jl")

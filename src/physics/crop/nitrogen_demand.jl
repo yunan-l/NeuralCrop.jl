@@ -6,7 +6,7 @@ function ndemand_crop!(crop::Crop,
                        temp::AbstractArray{T}
 ) where {T <: AbstractFloat}
 
-    backend = get_backend(crop.ndemand_tot)
+    backend = KernelAbstractions.get_backend(crop.ndemand_tot)
 
     kernel = ndemand_crop_kernel!(backend)
     
@@ -25,7 +25,7 @@ function ndemand_crop!(crop::Crop,
            temp, 
            ndrange=length(crop.ndemand_tot))
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
   
 end
 

@@ -11,7 +11,7 @@ function crop_nitrogen!(crop::Crop,
     ndemand_crop!(crop, PFT, param, photos_vmax, pet_daylength, temp)
     nuptake_crop!(crop, PFT, param, soil)
 
-    backend = get_backend(crop.nitrogen)
+    backend = KernelAbstractions.get_backend(crop.nitrogen)
 
     kernel = crop_nitrogen_kernel!(backend)
     
@@ -28,7 +28,7 @@ function crop_nitrogen!(crop::Crop,
            crop.pooln,
            ndrange=length(crop.nitrogen))
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
 
 end
 
@@ -114,7 +114,7 @@ function crop_nitrogen_old!(crop::Crop,
     ndemand_crop!(crop, PFT, param, photos_vmax, pet_daylength, temp)
     nuptake_crop!(crop, PFT, param, soil)
 
-    backend = get_backend(crop.nitrogen)
+    backend = KernelAbstractions.get_backend(crop.nitrogen)
 
     kernel = crop_nitrogen_old_kernel!(backend)
     
@@ -131,7 +131,7 @@ function crop_nitrogen_old!(crop::Crop,
            crop.pooln,
            ndrange=length(crop.nitrogen))
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
 
 end
 

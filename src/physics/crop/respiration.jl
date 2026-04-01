@@ -10,10 +10,10 @@ function respiration!(crop::Crop,
     
     # kernel based
     gtemp_air = similar(temp)
-    backend = get_backend(temp)
+    backend = KernelAbstractions.get_backend(temp)
     kernel = temp_response_kernel!(backend)
     kernel(temp_response, e0, temp, gtemp_air, ndrange=length(assim))
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
     
     # unlimited nitrogen
     rosoresp = crop.rootc * respcoeff * k * nc_ratio.root .* gtemp_air .+ crop.stoc * respcoeff * k * nc_ratio.sto .* gtemp_air

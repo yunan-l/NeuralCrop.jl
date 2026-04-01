@@ -5,13 +5,13 @@ function interception!(crop::Crop,
                        rain::AbstractArray{T}
 ) where {T <: AbstractFloat}
 
-    backend = get_backend(crop.intercep)
+    backend = KernelAbstractions.get_backend(crop.intercep)
 
     kernel = interception_kernel!(backend)
     
     kernel(param, PFT, crop.canopy_wet, crop.lai, crop.intercep, crop.isgrowing, pet_eeq, rain, ndrange=length(crop.intercep))
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
   
 end
 

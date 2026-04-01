@@ -43,6 +43,12 @@ function photosynthesis_C3!(PFT::PftParameters,
     #   Calculation of rubisco-activity-limited photosynthesis rate JC, molC/m2/h
     #   Eqn 5, Haxeltine & Prentice 1996
 
+    # sigma = 1.0f0 .- (c2 .- s) ./ (c2 .- theta * s)
+    # # sigma = sqrt.(0.5f0 * (sigma .+ sqrt(sigma .* sigma .+ (1f-3)^2)))
+    # sigma = sqrt.(max.(1f-7, sigma))
+    # photos.vmax = (1.0f0 / b) * (c1 ./ c2) .* ((2.0f0 * theta - 1.0f0) .* s .- (2.0f0 * theta .* s .- c2) .* sigma) .* crop_apar * cmass * cq
+
+
     jc = c2 .* hour2day(photos.vmax)
 
     #    Calculation of daily gross photosynthesis, Agd, gC/m2/day
@@ -68,26 +74,6 @@ function photosynthesis_C3!(PFT::PftParameters,
     photos.adt = max.(photos.adt, zero(T))
 
     photos.adtmm = photos.adt / cmass * T(8.314) .* degCtoK(temp) / p * T(1000.0)
-
-    # Zygote.ignore() do
-    #     #    Daily dark respiration, Rd, gC/m2/day
-    #     #    Eqn 10, Haxeltine & Prentice 1996
-    #     photos.rd .= ifelse.(photos.tstress .< 1e-2, zero(T), b * photos.vmax)
-    #     photos.adt .= photos.agd .- hour2day(pet_daylength) .* photos.rd
-
-    #     #    Convert adt from gC/m2/day to mm/m2/day using ideal gas equation
-    #     photos.adt .= max.(photos.adt, zero(T))
-
-    #     photos.adtmm .= photos.adt / cmass * 8.314f0 .* degCtoK(temp) / p * 1000.0f0  
-    #     #photos.adtmm = (photos.adt <= 0) ? 0 : photos.adt / cmass * 8.314 * degCtoK(temp)/ p * 1000.0 
-
-    #     # idx = agd .< 0 
-    #     # agd[idx] .= zero(T) #in rare occasions, agd(=GPP) can be negative, but shouldn't
-
-    #     # idx = photos.tstress .< 1e-2
-    #     # agd[idx] .= zero(T)
-    #     # rd[idx] .= zero(T)
-    # end
 
 end
 
@@ -125,6 +111,10 @@ function photosynthesis_C4!(PFT::PftParameters,
 
     je = c1 .* apar * cmass * cq ./ (pet_daylength .+ T(1e-5))
 
+    # sigma = 1.0f0 .- (c2 .- s) ./ (c2 .- theta * s)
+    # # sigma = sqrt.(0.5f0 * (sigma .+ sqrt(sigma .* sigma .+ (1f-3)^2)))
+    # sigma = sqrt.(max.(1f-7, sigma))
+    # photos.vmax = (1.0f0 / b) * (c1 ./ c2) .* ((2.0f0 * theta - 1.0f0) .* s .- (2.0f0 * theta .* s .- c2) .* sigma) .* crop_apar * cmass * cq
     # jc = c2 .* hour2day(photos.vmax)
     jc = hour2day(photos.vmax)
 
@@ -148,25 +138,5 @@ function photosynthesis_C4!(PFT::PftParameters,
     photos.adt = max.(photos.adt, zero(T))
 
     photos.adtmm = photos.adt / cmass * T(8.314) .* degCtoK(temp) / p * T(1000.0)
-
-    # Zygote.ignore() do
-    #     #    Daily dark respiration, Rd, gC/m2/day
-    #     #    Eqn 10, Haxeltine & Prentice 1996
-    #     photos.rd .= ifelse.(photos.tstress .< 1e-2, zero(T), b * photos.vmax)
-    #     photos.adt .= photos.agd .- hour2day(pet_daylength) .* photos.rd
-
-    #     #    Convert adt from gC/m2/day to mm/m2/day using ideal gas equation
-    #     photos.adt .= max.(photos.adt, zero(T))
-
-    #     photos.adtmm .= photos.adt / cmass * 8.314f0 .* degCtoK(temp) / p * 1000.0f0  
-    #     #photos.adtmm = (photos.adt <= 0) ? 0 : photos.adt / cmass * 8.314 * degCtoK(temp)/ p * 1000.0 
-
-    #     # idx = agd .< 0 
-    #     # agd[idx] .= zero(T) #in rare occasions, agd(=GPP) can be negative, but shouldn't
-
-    #     # idx = photos.tstress .< 1e-2
-    #     # agd[idx] .= zero(T)
-    #     # rd[idx] .= zero(T)
-    # end
 
 end

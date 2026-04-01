@@ -3,7 +3,7 @@ function carbon_allocation!(PFT::PftParameters,
                             photos::Photos
 )
 
-    backend = get_backend(crop.stoc)
+    backend = KernelAbstractions.get_backend(crop.stoc)
 
     kernel = carbon_allocation_kernel!(backend)
     
@@ -29,7 +29,7 @@ function carbon_allocation!(PFT::PftParameters,
            crop.lai_nppdeficit;
            ndrange=length(crop.stoc))
     
-    synchronize(backend)
+    KernelAbstractions.synchronize(backend)
 
 end
 
