@@ -1,7 +1,7 @@
 struct SciMLEuler
 end 
 
-function solve(prob::AbstractDEProblem, solver::SciMLEuler; kwargs...)
+function solve(prob::SciMLBase.AbstractDEProblem, solver::SciMLEuler; kwargs...)
 
     u = prob.u0
     f = prob.f
@@ -18,7 +18,7 @@ end
 struct SciMLEuler_litc
 end 
 
-function solve(prob::AbstractDEProblem, solver::SciMLEuler_litc; kwargs...)
+function solve(prob::SciMLBase.AbstractDEProblem, solver::SciMLEuler_litc; kwargs...)
 
     u = prob.u0
     f = prob.f
@@ -36,7 +36,7 @@ end
 struct SciMLEuler_soilc
 end 
 
-function solve(prob::AbstractDEProblem, solver::SciMLEuler_soilc; kwargs...)
+function solve(prob::SciMLBase.AbstractDEProblem, solver::SciMLEuler_soilc; kwargs...)
 
     u = prob.u0
     f = prob.f

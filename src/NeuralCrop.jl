@@ -4,11 +4,12 @@ module NeuralCrop
 
 # NUMERICS
 using DiffEqFlux, OrdinaryDiffEq, SciMLSensitivity, Statistics, LinearAlgebra, StatsBase
-import SciMLBase: solve, AbstractDEProblem
+# import SciMLBase: solve, AbstractDEProblem
+using SciMLBase
 
 # GPU PARALLEL
 # import KernelAbstractions: @kernel, @index, @inbounds # get_backend, synchronize
-using KernelAbstractions
+using KernelAbstractions ##  GPU/CPU parallelization
 using Lux, CUDA, LuxCUDA, Adapt
 
 # TRAINING
