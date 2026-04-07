@@ -44,7 +44,7 @@ function crop_carbon_hybrid!(nn_model,
                              temp::AbstractArray{T},
                              temp_n::AbstractArray{T},
                              soil_swc::AbstractArray{M},
-) where {T <: AbstractFloat, M <: AbstractFloat} # directly translated from LPJmL
+) where {T <: AbstractFloat, M <: AbstractFloat}
 
     # compute crop respiration
     Zygote.ignore() do
@@ -57,7 +57,7 @@ function crop_carbon_hybrid!(nn_model,
     end
 
     input = vcat(reshape(crop.npp/20, (1, :)), reshape(crop.fphu, (1, :)), reshape(temp_n, (1, :)), mean(soil_swc[1:3, :], dims = 1)) .* reshape(crop.isgrowing, (1, :))
-    crop.stoc = neural_stoc(nn_model, crop.stoc, ps, st, input)
+    crop.stoc = neural_stoc(nn_model, reshape(crop.stoc/20, (1, :)), ps, st, input)
 
     # compute crop rest carbon allocation
     Zygote.ignore() do

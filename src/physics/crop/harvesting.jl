@@ -10,7 +10,7 @@ function harvest_crop!(crop_cal::Calendar,
     Zygote.ignore() do
         # update hcallback and g_period
         crop_cal.hdate .= ifelse.((crop.harvesting0 .== false) .& (crop.harvesting .== true), day, crop_cal.hdate)
-        crop_cal.hcallback .= ifelse.((crop.harvesting0 .== false) .& (crop.harvesting .== true), 1, crop_cal.hcallback)
+        crop_cal.hcallback .= ifelse.((crop.harvesting0 .== false) .& (crop.harvesting .== true), 1, 0)
         crop.isgrowing .= ifelse.((crop.harvesting0 .== false) .& (crop.harvesting .== true), 0, crop.isgrowing)
         # Update crop variables
         crop.yield .= ifelse.(((crop.harvesting0 .== false) .& (crop.harvesting .== true)), crop.stoc, crop.yield)
@@ -19,7 +19,7 @@ function harvest_crop!(crop_cal::Calendar,
         soil.n_input .= vcat(reshape((crop.leafn .+ crop.pooln) .* residue_frac, (1, :)), device(zeros(Float32, (1, cell_size))), reshape(crop.rootn, (1, :))) .* reshape(crop_cal.hcallback, (1, :))
         # idx = ((crop.harvesting0 .== true) .& (crop.harvesting .== true)) .| ((crop.harvesting0 .== true) .& (crop.harvesting .== false)) .| ((crop.harvesting0 .== false) .& (crop.harvesting .== false))
         # crop_cal.hcallback[idx] .= 0
-        crop_cal.hcallback .= ifelse.(((crop.harvesting0 .== true) .& (crop.harvesting .== true)) .| ((crop.harvesting0 .== true) .& (crop.harvesting .== false)) .| ((crop.harvesting0 .== false) .& (crop.harvesting .== false)), 0, crop_cal.hcallback)
+        # crop_cal.hcallback .= ifelse.(((crop.harvesting0 .== true) .& (crop.harvesting .== true)) .| ((crop.harvesting0 .== true) .& (crop.harvesting .== false)) .| ((crop.harvesting0 .== false) .& (crop.harvesting .== false)), 0, crop_cal.hcallback)
     end
 
     # update harvesting variables

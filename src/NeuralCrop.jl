@@ -7,7 +7,8 @@ using DiffEqFlux, OrdinaryDiffEq, SciMLSensitivity, Statistics, LinearAlgebra, S
 import SciMLBase: solve, AbstractDEProblem
 
 # GPU PARALLEL
-import KernelAbstractions: @kernel, @index, @inbounds # get_backend, synchronize
+# import KernelAbstractions: @kernel, @index, @inbounds # get_backend, synchronize
+using KernelAbstractions
 using Lux, CUDA, LuxCUDA, Adapt
 
 # TRAINING
@@ -59,7 +60,7 @@ export deg2rad, ppm2Pa, ppm2bar, hour2day, hour2sec, degCtoK
 export min_max_norm, z_score_norm # OnePoint_one_dimension, OnePoint_dimensions, z_score_one_dimension, min_max_one_dimension, divide_data_one_dimension, divide_data_dimensions
 
 # DATA
-export InitilDataLoader, ClimateDataLoader, DataLoader, DataLoader_winter_wheat, DataLoader_predict
+export InitilDataLoader, ClimateDataLoader, DataLoader, DataLoader_winter_wheat
 
 # NEURAL NETWORK
 export NODE, MLP, solve, SciMLEuler, SciMLEuler_litc, SciMLEuler_soilc, neural_gpp, neural_lambda, neural_vmax, neural_stoc, neural_allocation, hybrid_litc, hybrid_soilc, hybrid_litn, hybrid_soiln,
@@ -80,6 +81,7 @@ include("physics/variables/define_structs.jl")
 include("physics/variables/default_param.jl")
 include("physics/variables/units.jl")
 include("physics/variables/init_var.jl")
+include("physics/variables/init_struct.jl")
 include("physics/variables/callback.jl")
 include("physics/variables/output.jl")
 include("physics/variables/DataLoader.jl")
@@ -115,6 +117,8 @@ include("physics/soil/soil_temp.jl")
 include("physics/soil/nitrogen_transform.jl")
 include("physics/soil/infil_perc.jl")
 include("physics/soil/soil_water.jl")
+include("physics/soil/soil_carbon.jl")
+include("physics/soil/soil_nitrogen.jl")
 
 # Hybrid
 include("hybrid/crop_carbon.jl")

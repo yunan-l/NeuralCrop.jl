@@ -12,16 +12,16 @@ function cultivate!(crop::Crop,
     @unpack manure_cn, nfert_split_frac, nmanure_nh4_frac= param
 
     Zygote.ignore() do
-        if day > 1 && day % 365 == 1
-            crop_cal.sdate = crop_sdate[div(day, 365) + 1, :]
-        end
-        day_ = day % 365 != 0 ? day % 365 : 365
-        crop.harvesting .= ifelse.(crop_cal.sdate .== day_, false, crop.harvesting)
+        # if day > 1 && day % 365 == 1
+        #     crop_cal.sdate = crop_sdate[div(day, 365) + 1, :]
+        # end
+        # day_ = day % 365 != 0 ? day % 365 : 365
+        crop.harvesting .= ifelse.(crop_cal.sdate .== day, false, crop.harvesting)
         # Update scallback and g_period
-        crop_cal.scallback .= ifelse.(crop_cal.sdate .== day_, 1, crop_cal.scallback)
-        crop.isgrowing .= ifelse.(crop_cal.sdate .== day_, 1, crop.isgrowing)
-        crop_cal.scallback .= ifelse.(crop_cal.sdate .!= day_, 0, crop_cal.scallback)
-        fertilizer!(param, crop_cal, ml, crop, soil, day_)
+        crop_cal.scallback .= ifelse.(crop_cal.sdate .== day, 1, crop_cal.scallback)
+        crop.isgrowing .= ifelse.(crop_cal.sdate .== day, 1, crop.isgrowing)
+        crop_cal.scallback .= ifelse.(crop_cal.sdate .!= day, 0, crop_cal.scallback)
+        fertilizer!(param, crop_cal, ml, crop, soil, day)
     end
 
     crop.lai = crop.lai .* (1 .- crop_cal.scallback) .+ 0.000415f0 .* crop_cal.scallback

@@ -30,7 +30,6 @@ function daily_crop_C3!(start_day,
         cultivate!(crop, crop_cal, lpjml.crop.sdate, lpjmlparam, managed_land, soil, day_of_year, device)
 
         update_climbuf!(cft, temp, climate.temp, climbuf, day, device) # update climate buffer
-        # daily_climbuf!(temp, climbuf.temp) # daily climate buf update
         albedo!(cft, crop, pet.albedo)  # compute albedo
         petpar!(pet, day_of_year, latitude, temp, lwr, swr) # compute crop potential evapotraspiration variables
         soiltemp_lag!(soil, climbuf, device)  # compute soil temperature, using very siample linear method, now the five soil-layer temperature is same
@@ -44,10 +43,10 @@ function daily_crop_C3!(start_day,
         temp_stress(cft, photopar, pet, photos, k, temp) # temperature stress function
 
         # C3 photosynthesis
-        hybrid_photos_C3!(model, ps, st, lpjmlparam, cft, photopar, photos, crop, pet.daylength, soil.swc./soil.layer_depth, temp_n, temp, co2)
+        hybrid_photos_C3!(model, ps, st, lpjmlparam, cft, photopar, photos, crop, pet.daylength, soil.swc./soil.layer_depth, temp_n, temp, co2; comp_vmax = true)
 
         # crop respiration and carbon allocation
-        crop_carbon_old!(photos, crop, cft, lpjmlparam, temp)
+        crop_carbon!(photos, crop, cft, lpjmlparam, temp)
 
         # crop nitrogen allocation
         # crop_nitrogen_old!(crop, cft, soil, lpjmlparam, photos.vmax, pet.daylength, temp) # nitrogen cycle
@@ -77,23 +76,24 @@ function daily_crop_C3!(start_day,
 end
 
 
-function daily_crop_maize!(day_start,
-                           day_end,
-                           model,
-                           ps, 
-                           st,
-                           parameters,
-                           data_set,
-                           cell_size,
-                           climbuf, 
-                           crop, 
-                           crop_cal, 
-                           photos, 
-                           pet, 
-                           soil, 
-                           managed_land, 
-                           output,
-                           device
+function daily_crop_C4!(day_start,
+                        day_end,
+                        model,
+                        ps, 
+                        st,
+                        parameters,
+                        data_set,
+                        cell_size,
+                        climbuf, 
+                        crop, 
+                        crop_cal, 
+                        photos, 
+                        pet, 
+                        soil, 
+                        managed_land, 
+                        output,
+                        device;
+                        maize = false
 )
 
     @unpack cft, lpjmlparam, photopar, k = parameters
@@ -108,8 +108,7 @@ function daily_crop_maize!(day_start,
         # initial crop variables in sowing day and fertilizer
         cultivate!(crop, crop_cal, lpjml.crop.sdate, lpjmlparam, managed_land, soil, day_of_year, device)
 
-        update_climbuf!(cft, temp, climate.temp, climbuf, day_of_year, device) # update climate buffer
-        # daily_climbuf!(temp, climbuf.temp) # daily climate buf update
+        update_climbuf!(cft, temp, climate.temp, climbuf, day, device) # update climate buffer
         albedo!(cft, crop, pet.albedo)  # compute albedo
         petpar!(pet, day_of_year, latitude, temp, lwr, swr) # compute crop potential evapotraspiration variables
         soiltemp_lag!(soil, climbuf, device)  # compute soil temperature, using very siample linear method, now the five soil-layer temperature is same
@@ -119,14 +118,19 @@ function daily_crop_maize!(day_start,
         
         harvest_crop!(crop_cal, crop, soil, lpjml.crop.residuefrac, device, cell_size, day_of_year) # crop harvesting
         
-        apar_crop_maize!(cft, crop, pet) # crop absorbed photosynthetic radiation
+        if maize
+            apar_crop_maize!(cft, crop, pet) # crop absorbed photosynthetic radiation
+        else
+            apar_crop!(cft, crop, pet) # crop absorbed photosynthetic radiation
+        end
+
         temp_stress(cft, photopar, pet, photos, k, temp) # temperature stress function
 
         # C4 photosynthesis
-        hybrid_photos_C4!(model, ps, st, lpjmlparam, cft, photopar, photos, crop, pet.daylength, soil.swc./soil.layer_depth, temp_n, temp)
+        hybrid_photos_C4!(model, ps, st, lpjmlparam, cft, photopar, photos, crop, pet.daylength, soil.swc./soil.layer_depth, temp_n, temp; comp_vmax = true)
 
         # crop respiration and carbon allocation
-        crop_carbon_old!(photos, crop, cft, lpjmlparam, temp)
+        crop_carbon!(photos, crop, cft, lpjmlparam, temp)
 
         # crop nitrogen allocation
         crop_nitrogen!(crop, cft, soil, lpjmlparam, photos.vmax, pet.daylength, temp) # nitrogen cycle         
@@ -176,26 +180,20 @@ function daily_crop_C3_training_rollout!(day_start,
     @unpack cft, lpjmlparam, photopar, k = parameters
     @unpack latitude, climate, lpjml = data_set
 
-    # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, cell_size, device)
-
-    # Zygote.ignore() do
-    #     spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
-    # end
 
     for day = day_start : day_end
 
-        day_ = day % 365 != 0 ? day % 365 : 365
+        day_of_year = day % 365 != 0 ? day % 365 : 365
 
         temp, prec, swr, lwr, temp_n, prec_n, swr_n, lwr_n, co2 = readclimate!(climate, day)
 
         # initial crop variables in sowing day and fertilizer
-        cultivate!(crop, crop_cal, lpjml.crop.sdate, lpjmlparam, managed_land, soil, day, device)
+        cultivate!(crop, crop_cal, lpjml.crop.sdate, lpjmlparam, managed_land, soil, day_of_year, device)
 
         Zygote.ignore() do
             update_climbuf!(cft, temp, climate.temp, climbuf, day, device) # update climate buffer
-            # daily_climbuf!(temp, climbuf.temp) # daily climate buf update
             albedo!(cft, crop, pet.albedo)  # compute albedo
-            petpar!(pet, day_, latitude, temp, lwr, swr) # compute crop potential evapotraspiration variables
+            petpar!(pet, day_of_year, latitude, temp, lwr, swr) # compute crop potential evapotraspiration variables
             soiltemp_lag!(soil, climbuf, device)  # compute soil temperature, using very siample linear method, now the five soil-layer temperature is same
         end
 
@@ -204,7 +202,7 @@ function daily_crop_C3_training_rollout!(day_start,
             phenology_crop!(crop, climbuf.V_req, cft, temp, pet.daylength)
         end
         
-        harvest_crop!(crop_cal, crop, soil, lpjml.crop.residuefrac, device, cell_size, day_) # crop harvesting
+        harvest_crop!(crop_cal, crop, soil, lpjml.crop.residuefrac, device, cell_size, day_of_year) # crop harvesting
         
         Zygote.ignore() do
             apar_crop!(cft, crop, pet) # crop absorbed photosynthetic radiation
@@ -216,9 +214,6 @@ function daily_crop_C3_training_rollout!(day_start,
 
         # crop respiration and carbon allocation
         crop_carbon!(model.vegc, ps.ps_vegc, st.st_vegc, photos, crop, cft, lpjmlparam, temp, temp_n, soil.swc./soil.layer_depth)
-        # Zygote.ignore() do
-        #     crop_carbon_old!(photos, crop, cft, lpjmlparam, temp)
-        # end
 
         Zygote.ignore() do
             crop_nitrogen!(crop, cft, soil, lpjmlparam, photos.vmax, pet.daylength, temp) # nitrogen cycle
@@ -269,26 +264,19 @@ function daily_crop_winter_wheat_training_rollout!(day_start,
     @unpack cft, lpjmlparam, photopar, k = parameters
     @unpack latitude, climate, lpjml = data_set
 
-    # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, cell_size, device)
-
-    # Zygote.ignore() do
-    #     spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
-    # end
-
     for day = day_start : day_end
 
-        day_ = day % 365 != 0 ? day % 365 : 365
+        day_of_year = day % 365 != 0 ? day % 365 : 365
 
         temp, prec, swr, lwr, temp_n, prec_n, swr_n, lwr_n, co2 = readclimate!(climate, day)
 
         # initial crop variables in sowing day and fertilizer
-        cultivate!(crop, crop_cal, lpjml.crop.sdate, lpjmlparam, managed_land, soil, day, device)
+        cultivate!(crop, crop_cal, lpjml.crop.sdate, lpjmlparam, managed_land, soil, day_of_year, device)
 
         Zygote.ignore() do
             update_climbuf!(cft, temp, climate.temp, climbuf, day, device) # update climate buffer
-            # daily_climbuf!(temp, climbuf.temp) # daily climate buf update
             albedo!(cft, crop, pet.albedo)  # compute albedo
-            petpar!(pet, day_, latitude, temp, lwr, swr) # compute crop potential evapotraspiration variables
+            petpar!(pet, day_of_year, latitude, temp, lwr, swr) # compute crop potential evapotraspiration variables
             soiltemp_lag!(soil, climbuf, device)  # compute soil temperature, using very siample linear method, now the five soil-layer temperature is same
         end
 
@@ -297,7 +285,7 @@ function daily_crop_winter_wheat_training_rollout!(day_start,
             phenology_crop!(crop, climbuf.V_req, cft, temp, pet.daylength)
         end
         
-        harvest_crop!(crop_cal, crop, soil, lpjml.crop.residuefrac, device, cell_size, day_) # crop harvesting
+        harvest_crop!(crop_cal, crop, soil, lpjml.crop.residuefrac, device, cell_size, day_of_year) # crop harvesting
         
         Zygote.ignore() do
             apar_crop!(cft, crop, pet) # crop absorbed photosynthetic radiation
@@ -309,9 +297,6 @@ function daily_crop_winter_wheat_training_rollout!(day_start,
 
         # crop respiration and carbon allocation
         crop_carbon!(model.vegc, ps.ps_vegc, st.st_vegc, photos, crop, cft, lpjmlparam, temp, temp_n, soil.swc./soil.layer_depth)
-        # Zygote.ignore() do
-        #     crop_carbon_old!(photos, crop, cft, lpjmlparam, temp)
-        # end
 
         Zygote.ignore() do
             crop_nitrogen!(crop, cft, soil, lpjmlparam, photos.vmax, pet.daylength, temp) # nitrogen cycle
@@ -342,33 +327,28 @@ function daily_crop_winter_wheat_training_rollout!(day_start,
         
 end
 
-function daily_crop_maize_training_rollout!(day_start,
-                                            day_end,
-                                            model,
-                                            ps, 
-                                            st,
-                                            parameters,
-                                            data_set,
-                                            cell_size,
-                                            climbuf, 
-                                            crop, 
-                                            crop_cal, 
-                                            photos, 
-                                            pet, 
-                                            soil, 
-                                            managed_land, 
-                                            output,
-                                            device
+function daily_crop_C4_training_rollout!(day_start,
+                                         day_end,
+                                         model,
+                                         ps, 
+                                         st,
+                                         parameters,
+                                         data_set,
+                                         cell_size,
+                                         climbuf, 
+                                         crop, 
+                                         crop_cal, 
+                                         photos, 
+                                         pet, 
+                                         soil, 
+                                         managed_land, 
+                                         output,
+                                         device;
+                                         maize = false
 )
 
     @unpack cft, lpjmlparam, photopar, k = parameters
     @unpack latitude, climate, lpjml = data_set
-
-    # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparam, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparam, cell_size, device)
-
-    # Zygote.ignore() do
-    #     spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
-    # end
 
     for day = day_start : day_end
 
@@ -395,7 +375,11 @@ function daily_crop_maize_training_rollout!(day_start,
         harvest_crop!(crop_cal, crop, soil, lpjml.crop.residuefrac, device, cell_size, day_) # crop harvesting
         
         Zygote.ignore() do
-            apar_crop_maize!(cft, crop, pet) # crop absorbed photosynthetic radiation
+            if maize
+                apar_crop_maize!(cft, crop, pet) # crop absorbed photosynthetic radiation
+            else
+                apar_crop!(cft, crop, pet) # crop absorbed photosynthetic radiation
+            end
             temp_stress(cft, photopar, pet, photos, k, temp) # temperature stress function
         end
 

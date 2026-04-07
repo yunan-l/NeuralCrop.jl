@@ -12,6 +12,4 @@ function crop_carbon!(photos::Photos,
     carbon_allocation!(PFT, crop, photos)
     crop.vegc = vcat(reshape(crop.rootc, (1, :)), reshape(crop.leafc, (1, :)), reshape(crop.stoc, (1, :)), reshape(crop.poolc, (1, :)))
 
-    # crop.carbon_sum = crop.rootc .+ crop.leafc .+ crop.stoc .+ crop.poolc
-    # crop.carbon_sum = crop.carbon_sum .* crop.isgrowing
 end

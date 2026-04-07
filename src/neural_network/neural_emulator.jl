@@ -25,7 +25,7 @@ function neural_stoc(n::NODE, u0, ps, st, input; dt = 1.0f0)
     
     prob = ODEProblem{false}(ODEFunction{false}(rhs), u0, n.tspan, ps)
     
-    return solve(prob, n.solver; dt = dt)
+    return vec(solve(prob, n.solver; dt = dt))
 end
 
 # vegetation carbon pools

@@ -369,6 +369,7 @@ mutable struct Output{T <: AbstractArray{ <: AbstractFloat}, M <: AbstractArray{
     carbon_sum::T
     biomass::T
     lai::T
+    stoc::T
     yield::T
     reco::T
     vegc::M 
@@ -385,4 +386,5 @@ mutable struct Output{T <: AbstractArray{ <: AbstractFloat}, M <: AbstractArray{
     et::T
     prec::T
     temp::T
+    harvesting_mask::T
 end

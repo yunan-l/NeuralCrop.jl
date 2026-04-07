@@ -37,34 +37,6 @@ function output_finetune!(output::Output,
 
 end
 
-function output_predict!(output::Output,
-                         photos::Photos,
-                         crop::Crop,
-                         soil::Soil,
-                         day
-) 
-
-    output.gpp = vcat(output.gpp, reshape(max.(0.0f0, photos.agd .* crop.isgrowing), (1, :)))
-    output.lambda = vcat(output.lambda, reshape(max.(0.0f0, photos.lambda .* crop.isgrowing), (1, :)))
-    output.vmax = vcat(output.vmax, reshape(max.(0.0f0, photos.vmax .* crop.isgrowing), (1, :)))
-    output.vegc = vcat(output.vegc, reshape(max.(0.0f0, crop.vegc .* reshape(crop.isgrowing, (1, :))), (1, :)))
-    output.resp = vcat(output.resp, reshape(crop.resp, (1, :)))
-    output.reco = vcat(output.reco, reshape(crop.resp .+ photos.rd .+ soil.rh, (1, :)))
-
-    output.growing_mask = vcat(output.growing_mask, reshape(crop.isgrowing, (1, :)))
-
-    output.litc = vcat(output.litc, reshape(soil.litc, (1, :)))
-    output.fastc = vcat(output.fastc, reshape(soil.fastc, (1, :)))
-    output.slowc = vcat(output.slowc, reshape(soil.slowc, (1, :)))
-
-    output.swc = vcat(output.swc, reshape(soil.swc, (1, :)))
-
-    if day == 365
-        output.yield = vcat(output.yield, reshape(max.(crop.yield, 0.0f0), (1, :)))
-    end
-
-end
-
 
 function output_yield!(output::Output,
                        crop::Crop,
