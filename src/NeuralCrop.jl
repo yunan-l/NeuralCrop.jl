@@ -69,8 +69,8 @@ export NODE, MLP, solve, SciMLEuler, SciMLEuler_litc, SciMLEuler_soilc, neural_g
 export train_loop_winter_wheat_rollout!, train_loop_rollout!, loss_crop_rollout!
 export daily_crop_winter_wheat_training_rollout!, daily_crop_C3_training_rollout!, daily_crop_maize_training_rollout!
 
-# DAILY CROP
-export daily_crop_C3!, daily_crop_maize!
+# DAILY CROP SIMULATIONS
+export daily_crop_C3!, daily_crop_C4!
 
 # PLOT
  export load_nc_file_one_dimension, load_nc_file_dimensions, plot_loss_curve
@@ -121,13 +121,12 @@ include("physics/soil/soil_water.jl")
 include("physics/soil/soil_carbon.jl")
 include("physics/soil/soil_nitrogen.jl")
 
-# Hybrid
+### Hybrid
 include("hybrid/crop_carbon.jl")
 include("hybrid/photosynthesis.jl")
 include("hybrid/soil_carbon.jl")
 include("hybrid/soil_nitrogen.jl")
 include("hybrid/soil_water.jl")
-include("hybrid/daily_crop.jl")
 
 ### Neural network
 include("neural_network/define_net_struct.jl")
@@ -137,6 +136,9 @@ include("neural_network/solver.jl")
 include("neural_network/loss.jl")
 include("neural_network/training_loop.jl")
 
+### Training
+include("training/daily_crop.jl")
+
 ### Utilities
 include("utilities/data_loader.jl")
 include("utilities/divide_data.jl")
@@ -144,5 +146,9 @@ include("utilities/data_norm.jl")
 include("utilities/select_grid.jl")
 include("utilities/utils.jl")
 include("utilities/visualization.jl")
+
+### Simulations
+include("simulations/daily_crop_C3.jl")
+include("simulations/daily_crop_C4.jl")
 
 end
