@@ -18,7 +18,6 @@ NeuralCrop.jl
   <a href="https://doi.org/10.48550/arXiv.2512.20177">
     <img src="https://img.shields.io/badge/DOI-10.48550/arXiv.2512.20177-blue.svg" alt="DOI">
   </a>
-
 </p>
 
 NeuralCrop is a differentiable hybrid global gridded crop model (GGCM) that combines the strengths of the state-of-the-art GGCM [LPJmL](https://doi.org/10.5194/gmd-11-1343-2018) with machine learning approaches. By implementing process-based components in a differentiable form for seamless integration with machine learning methods, NeuralCrop enables end-to-end 'online training', with machine learning components optimized in tandem with the physical model dynamics. NeuralCrop is a flexible Julia framework supporting both purely process-based and hybrid simulations across CPUs and GPUs. More details are available in our preprint paper: [https://arxiv.org/abs/2512.20177](https://arxiv.org/abs/2512.20177)
