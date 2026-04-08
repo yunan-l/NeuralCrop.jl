@@ -72,7 +72,7 @@ We compare the inference time between GPU-accelerated NeuralCrop and CPU-based L
 
 ## Acknowledgements
 
-NeuralCrop.jl is a research project developed with the support by the [Earth System Modeling group ](https://www.asg.ed.tum.de/esm/home/) at the Technical University of Munich (TUM) and [FutureLab on Artificial Intelligence](https://www.pik-potsdam.de/en/institute/departments/complexity-science/research/artificial-intelligence) at the Potsdam Institute for Climate Impact Research (PIK). The main developer acknowledges funding from the program of the China Scholarship Council (grant agreement no.202303250017) and the [Horizon Europe ClimTip project](https://www.climate-tipping-points.eu) (grant agreement no.101137601)
+NeuralCrop.jl is a research project developed with the support by the [Earth System Modeling group ](https://www.asg.ed.tum.de/esm/home/) at the Technical University of Munich (TUM) and [FutureLab on Artificial Intelligence](https://www.pik-potsdam.de/en/institute/departments/complexity-science/research/artificial-intelligence) at the Potsdam Institute for Climate Impact Research (PIK). The main developer acknowledges funding from the program of the China Scholarship Council (grant agreement no.202303250017) and the Horizon Europe ClimTip project (grant agreement no.101137601).
 
 Here, we highly recommend [Terrarium.jl](https://github.com/NumericalEarth/Terrarium.jl), a fast, differentiable, and GPU-aware land modelling framework under construction 🚧, and of course very welcome your contributions 🏃‍♂️💨.
 
