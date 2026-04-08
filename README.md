@@ -74,7 +74,7 @@ NeuralCrop.jl is a research project developed with the support by the [Earth Sys
 
 Here, we highly recommend [Terrarium.jl](https://github.com/NumericalEarth/Terrarium.jl), a fast, differentiable, and GPU-aware land modelling framework under construction 🚧, and of course very welcome your contributions 🏃‍♂️💨.
 
-As part of our long-term vision goal to build a fully differentiable Earth System Model in Julia, we plan to couple NeuralCrop.jl with Terrarium.jl in the coming future. This integration will enable more comprehensive biosphere simulations within an automatically differentiable pipeline.
+As part of our long-term goal to build a fully differentiable Earth System Model in Julia, we plan to couple NeuralCrop.jl with Terrarium.jl in the coming future. This integration will enable more comprehensive biosphere simulations within an automatically differentiable pipeline.
 
 
 
