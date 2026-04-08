@@ -5,7 +5,7 @@ NeuralCrop.jl
 
 <!-- description -->
 <p align="center">
-  <strong> 🧑‍🌾 💧 ☀️ 🌾 Fast and flexible Julia framework for hybrid crop modelling across scales. </strong>
+  <strong> 🧑‍🌾 💧 ☀️ 🌾 🚀 Fast and flexible Julia framework for hybrid crop modelling across scales. </strong>
 </p>
 
 <p align="center">
@@ -48,7 +48,7 @@ We recommend running NeuralCrop on Julia version 1.10.x.
 
 NeuralCrop does not provide the climate and management data required to drive the model, as these datasets originate from third-party sources. You can obtain the necessary input data from the [ISIMIP data repository](https://data.isimip.org/) (Inter-Sectoral Impact Model Intercomparison Project), and please cite the ISIMIP data appropriately when using it.
 
-For a quick start, we provide a simplified demo in the examples/ directory, including 20-year forcing data (2000-2019) covering 10 grid cells. You can run the model in your Jupyter Notebook
+For a quick start, we provide a simplified demo in the examples/ directory, including 20-year forcing data (2000-2019) covering 10 grid cells. You can run the model on Jupyter Notebook 🚀.
 
 
 ## Citing
