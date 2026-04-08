@@ -42,6 +42,9 @@ function output_yield!(output::Output,
                        crop::Crop,
                        day
 )
+
+    output.stoc = vcat(output.stoc, reshape(crop.stoc, (1, :)))
+
     if day == 365
         output.yield = vcat(output.yield, reshape(max.(crop.yield, 0.0f0), (1, :)))
     end
