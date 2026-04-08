@@ -44,7 +44,7 @@ pkg> instantiate()
 
 This approach ensures you use the exact versions of all dependencies as specified in `Manifest.toml`, avoiding potential package version conflicts.
 
-We recommend running NeuralCrop on Julia version 1.10.x
+We recommend running NeuralCrop on Julia version 1.10.x.
 
 ## Example use
 
