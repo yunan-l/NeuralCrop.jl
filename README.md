@@ -63,7 +63,7 @@ If you are interested in contributing or have any questions, please feel free to
 
 We compare the inference time between GPU-accelerated NeuralCrop and CPU-based LPJmL by running them on a $0.5^\circ \times 0.5^\circ$ spatial resolution with daily time steps over a 20-year simulation period (7300 days) at different grid cells. NeuralCrop achieves approximately 100x speedup 🚀🚀🚀.
 
-<p align="center">
+<p align="left">
   <img src="docs/src/assets/comparison_time.png" width="450">
 </p>
 
