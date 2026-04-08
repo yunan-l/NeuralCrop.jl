@@ -50,7 +50,7 @@ function daily_crop_C4!(day_start,
         temp_stress(cft, photopar, pet, photos, k, temp) # temperature stress function
 
         # C4 photosynthesis
-        hybrid_photos_C4!(model, ps, st, lpjmlparam, cft, photopar, photos, crop, pet.daylength, soil.swc./soil.layer_depth, temp_n, temp; comp_vmax = true)
+        hybrid_photos_C4!(model, ps, st, lpjmlparam, cft, photopar, photos, crop, pet.daylength, soil.swc./soil.layer_depth, temp_n, temp)
 
         # crop respiration and carbon allocation
         crop_carbon!(photos, crop, cft, lpjmlparam, temp)

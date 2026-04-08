@@ -44,7 +44,7 @@ function daily_crop_C3!(start_day,
         temp_stress(cft, photopar, pet, photos, k, temp) # temperature stress function
 
         # C3 photosynthesis
-        hybrid_photos_C3!(model, ps, st, lpjmlparam, cft, photopar, photos, crop, pet.daylength, soil.swc./soil.layer_depth, temp_n, temp, co2; comp_vmax = true)
+        hybrid_photos_C3!(model, ps, st, lpjmlparam, cft, photopar, photos, crop, pet.daylength, soil.swc./soil.layer_depth, temp_n, temp, co2)
 
         # crop respiration and carbon allocation
         crop_carbon!(photos, crop, cft, lpjmlparam, temp)
