@@ -15,6 +15,9 @@ NeuralCrop.jl
   <a href="https://github.com/yunan-l/NeuralCrop.jl/actions">
     <img src="https://github.com/yunan-l/NeuralCrop.jl/actions/workflows/CI.yml/badge.svg" alt="Build Status">
   </a>
+  <a href="https://creativecommons.org/licenses/by-nc/4.0/">
+    <img alt="Creative Commons License" src="https://img.shields.io/badge/License-CC%20BY--NC%204.0-red.svg?style=flat-square">
+  </a>
   <a href="https://doi.org/10.48550/arXiv.2512.20177">
     <img src="https://img.shields.io/badge/DOI-10.48550/arXiv.2512.20177-blue.svg" alt="DOI">
   </a>
@@ -69,12 +72,11 @@ We compare the inference time between GPU-accelerated NeuralCrop and CPU-based L
 
 ## Acknowledgements
 
-NeuralCrop.jl is a research project developed with the support by the [Earth System Modeling group ](https://www.asg.ed.tum.de/esm/home/) at the Technical University of Munich (TUM) and [FutureLab on Artificial Intelligence](https://www.pik-potsdam.de/en/institute/departments/complexity-science/research/artificial-intelligence) at the Potsdam Institute for Climate Impact Research (PIK). 
+NeuralCrop.jl is a research project developed with the support by the [Earth System Modeling group ](https://www.asg.ed.tum.de/esm/home/) at the Technical University of Munich (TUM) and [FutureLab on Artificial Intelligence](https://www.pik-potsdam.de/en/institute/departments/complexity-science/research/artificial-intelligence) at the Potsdam Institute for Climate Impact Research (PIK). The main developer acknowledges funding from the program of the China Scholarship Council (grant agreement no.202303250017) and the [Horizon Europe ClimTip project](https://www.climate-tipping-points.eu) (grant agreement no.101137601)
 
 Here, we highly recommend [Terrarium.jl](https://github.com/NumericalEarth/Terrarium.jl), a fast, differentiable, and GPU-aware land modelling framework under construction 🚧, and of course very welcome your contributions 🏃‍♂️💨.
 
 As part of our long-term goal to build a fully differentiable Earth System Model in Julia, we plan to couple NeuralCrop.jl with Terrarium.jl in the coming future. This integration will enable more comprehensive biosphere simulations within an automatically differentiable pipeline.
-
 
 
 ## Citing
