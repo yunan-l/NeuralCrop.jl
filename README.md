@@ -70,7 +70,7 @@ We compare the inference time between GPU-accelerated NeuralCrop and CPU-based L
 
 ## Acknowledgements
 
-NeuralCrop.jl is a research project developed with the support by the [FutureLab on Artificial Intelligence](https://www.pik-potsdam.de/en/institute/departments/complexity-science/research/artificial-intelligence) at the Potsdam Institute for Climate Impact Research (PIK) and [Earth System Modeling group ](https://www.asg.ed.tum.de/esm/home/) at the Technical University of Munich (TUM). 
+NeuralCrop.jl is a research project developed with the support by the [Earth System Modeling group ](https://www.asg.ed.tum.de/esm/home/) at the Technical University of Munich (TUM) and [FutureLab on Artificial Intelligence](https://www.pik-potsdam.de/en/institute/departments/complexity-science/research/artificial-intelligence) at the Potsdam Institute for Climate Impact Research (PIK). 
 
 Here, we also highly recommend [Terrarium.jl](https://github.com/NumericalEarth/Terrarium.jl), a fast, differentiable, and GPU-aware land modelling framework under construction 🚧, and of course very welcome your contributions 🏃‍♂️💨.
 
@@ -80,7 +80,7 @@ As part of our long-term vision goal to build a fully differentiable Earth Syste
 
 ## Citing
 
-If you use NeuralCrop.jl in research or other activities 🏄, please mention NeuralCrop.jl and cite our paper:
+If you use NeuralCrop.jl in research or other non-commercial activities 🏄, please mention NeuralCrop.jl and cite our paper:
 
 > Lin, Yunan, et al. "NeuralCrop: Combining physics and machine learning for improved crop yield projections." arXiv preprint arXiv:2512.20177 (2025).
 
