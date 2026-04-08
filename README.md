@@ -1,6 +1,6 @@
 <!-- Title -->
 <h1 align="center">
-  🌾 NeuralCrop.jl
+🧑‍🌾 💧 ☀️ 🌾 NeuralCrop.jl
 </h1>
 
 
