@@ -50,6 +50,33 @@ NeuralCrop does not provide the climate and management data required to drive th
 
 For a quick start, we provide a simplified demo in the examples/ directory, including 20-year forcing data (2000-2019) covering 10 grid cells. You can run the model on Jupyter Notebook 🚀.
 
+## Usage
+
+We warmly welcome the use of NeuralCrop.jl for academic research and educational purposes 🎓. You are encouraged to copy, modify, and build upon our code to advance scientific understanding of agricultural systems. 
+
+However, please note that this project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) [license](LICENSE). Any commercial application or redistribution for profit requires explicit prior authorization.
+
+If you are interested in contributing or have any questions, please feel free to contact <yunan.lin@tum.de>.
+
+
+## Performance benchmarks
+
+We compare the inference time between GPU-accelerated NeuralCrop and CPU-based LPJmL by running them on a $0.5^\circ \times 0.5^\circ$ spatial resolution with daily time steps over a 20-year simulation period (7300 days) at different grid cells. NeuralCrop achieves approximately 100x speedup 🚀🚀🚀.
+
+<p align="center">
+  <img src="/home/yunanli/hpc2024/Github/NeuralCrop/docs/src/assets/comparison_time.png" width="450">
+</p>
+
+
+## Acknowledgements
+
+NeuralCrop.jl is a research project developed with the support by the [FutureLab on Artificial Intelligence](https://www.pik-potsdam.de/en/institute/departments/complexity-science/research/artificial-intelligence) at the Potsdam Institute for Climate Impact Research (PIK) and [Earth System Modeling group ](https://www.asg.ed.tum.de/esm/home/) at the Technical University of Munich (TUM). 
+
+Here, we also highly recommend [Terrarium.jl](https://github.com/NumericalEarth/Terrarium.jl), a fast, differentiable, and GPU-aware land modelling framework under construction 🚧, and of course very welcome your contributions 🏃‍♂️💨.
+
+As part of our long-term vision goal to build a fully differentiable Earth System Model in Julia, we plan to couple NeuralCrop.jl with Terrarium.jl in the coming future. This integration will enable more comprehensive biosphere simulations within an automatically differentiable pipeline.
+
+
 
 ## Citing
 
