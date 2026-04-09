@@ -26,7 +26,7 @@ function daily_crop_C4!(day_start,
 
         day_of_year = day % 365 != 0 ? day % 365 : 365
 
-        temp, prec, swr, lwr, temp_n, prec_n, swr_n, lwr_n, co2 = readclimate!(climate, day)
+        temp, prec, swr, lwr, temp_n, swr_n, lwr_n, co2 = readclimate!(climate, day)
 
         # initial crop variables in sowing day and fertilizer
         cultivate!(crop, crop_cal, lpjml.crop.sdate, lpjmlparam, managed_land, soil, day_of_year, device)
@@ -39,7 +39,7 @@ function daily_crop_C4!(day_start,
         # compute phenology variables
         phenology_crop!(crop, climbuf.V_req, cft, temp, pet.daylength)
         
-        harvest_crop!(crop_cal, crop, soil, lpjml.crop.residuefrac, device, cell_size, day_of_year) # crop harvesting
+        harvest_crop!(crop_cal, crop, soil, output, lpjml.crop.residuefrac, device, cell_size, day_of_year) # crop harvesting
         
         if maize
             apar_crop_maize!(cft, crop, pet) # crop absorbed photosynthetic radiation
@@ -73,8 +73,8 @@ function daily_crop_C4!(day_start,
         # soil water cycle
         soil_water!(model.swc, ps.ps_swc, st.st_swc, lpjmlparam, soil, crop, prec, swr_n, lwr_n)
 
-        # output
-        output_yield!(output, crop, day_of_year)
+        # # output
+        # output_yield!(output, crop, day_of_year)
 
     end
 
@@ -106,7 +106,7 @@ function daily_crop_C4!(day_start,
 
         day_of_year = day % 365 != 0 ? day % 365 : 365
 
-        temp, prec, swr, lwr, temp_n, prec_n, swr_n, lwr_n, co2 = readclimate!(climate, day)
+        temp, prec, swr, lwr, temp_n, swr_n, lwr_n, co2 = readclimate!(climate, day)
 
         # initial crop variables in sowing day and fertilizer
         cultivate!(crop, crop_cal, lpjml.crop.sdate, lpjmlparam, managed_land, soil, day_of_year, device)
@@ -119,7 +119,7 @@ function daily_crop_C4!(day_start,
         # compute phenology variables
         phenology_crop!(crop, climbuf.V_req, cft, temp, pet.daylength)
         
-        harvest_crop!(crop_cal, crop, soil, lpjml.crop.residuefrac, device, cell_size, day_of_year) # crop harvesting
+        harvest_crop!(crop_cal, crop, soil, output, lpjml.crop.residuefrac, device, cell_size, day_of_year) # crop harvesting
         
         if maize
             apar_crop_maize!(cft, crop, pet) # crop absorbed photosynthetic radiation
@@ -153,8 +153,8 @@ function daily_crop_C4!(day_start,
         # soil water cycle
         soil_water!(lpjmlparam, soil, crop, prec)
 
-        # output
-        output_yield!(output, crop, day_of_year)
+        # # output
+        # output_yield!(output, crop, day_of_year)
 
     end
 

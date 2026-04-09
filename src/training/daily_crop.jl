@@ -24,7 +24,7 @@ function daily_crop_winter_wheat_training_rollout!(day_start,
 
         day_of_year = day % 365 != 0 ? day % 365 : 365
 
-        temp, prec, swr, lwr, temp_n, prec_n, swr_n, lwr_n, co2 = readclimate!(climate, day)
+        temp, prec, swr, lwr, temp_n, swr_n, lwr_n, co2 = readclimate!(climate, day)
 
         # initial crop variables in sowing day and fertilizer
         cultivate!(crop, crop_cal, lpjml.crop.sdate, lpjmlparam, managed_land, soil, day_of_year, device)
@@ -110,7 +110,7 @@ function daily_crop_C4_training_rollout!(day_start,
 
         day_ = day % 365 != 0 ? day % 365 : 365
 
-        temp, prec, swr, lwr, temp_n, prec_n, swr_n, lwr_n, co2 = readclimate!(climate, day)
+        temp, prec, swr, lwr, temp_n, swr_n, lwr_n, co2 = readclimate!(climate, day)
 
         # initial crop variables in sowing day and fertilizer
         cultivate!(crop, crop_cal, lpjml.crop.sdate, lpjmlparam, managed_land, soil, day, device)
