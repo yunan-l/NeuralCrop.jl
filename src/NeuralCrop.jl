@@ -141,9 +141,7 @@ include("training/daily_crop.jl")
 
 ### Utilities
 include("utilities/data_loader.jl")
-include("utilities/divide_data.jl")
 include("utilities/data_norm.jl")
-include("utilities/select_grid.jl")
 include("utilities/utils.jl")
 include("utilities/visualization.jl")
 

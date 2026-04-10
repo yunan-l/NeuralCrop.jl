@@ -226,7 +226,6 @@ function init_output(cell_size::Int,
         device(zeros(Float32, (1, cell_size))),              # lambda
         device(zeros(Float32, (1, cell_size))),              # vmax
         device(zeros(Float32, (1, cell_size))),              # resp
-        device(zeros(Float32, (1, cell_size))),              # carbon_sum
         device(zeros(Float32, (1, cell_size))),              # biomass
         device(zeros(Float32, (1, cell_size))),              # lai
         device(zeros(Float32, (1, cell_size))),              # stoc
@@ -246,7 +245,8 @@ function init_output(cell_size::Int,
         device(zeros(Float32, (1, cell_size))),              # et (evapotranspiration)
         device(zeros(Float32, (1, cell_size))),              # prec
         device(zeros(Float32, (1, cell_size))),              # temp
-        device(zeros(Float32, (1, cell_size)))               # harvesting mask
+        device(zeros(Float32, (1, cell_size))),              # harvesting mask
+        device(zeros(Float32, (1, cell_size)))               # fphu
     )
 
     return output
