@@ -1,0 +1,16 @@
+{
+  "variable" : "grid",
+  "firstcell" : 0,
+  "ncell" : 67420,
+  "cellsize_lon" : 0.500000,
+  "cellsize_lat" : 0.500000,
+  "nstep" : 1,
+  "timestep" : 1,
+  "nbands" : 2,
+  "descr" : "coordinates for valid grid cells",
+  "unit" : "degree",
+  "datatype" : "short",
+  "bigendian" : false,
+  "format" : "cdf",
+  "filename" : "grid.nc"
+}
