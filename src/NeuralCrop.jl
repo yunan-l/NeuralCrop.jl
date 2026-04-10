@@ -67,7 +67,7 @@ export InitilDataLoader, ClimateDataLoader, DataLoader, DataLoader_winter_wheat
 export NODE, MLP, solve, SciMLEuler, SciMLEuler_litc, SciMLEuler_soilc, neural_gpp, neural_lambda, neural_vmax, neural_stoc, neural_allocation, hybrid_litc, hybrid_soilc, hybrid_litn, hybrid_soiln,
        neural_moisture, get_mlp, get_node
 export train_loop_winter_wheat_rollout!, train_loop_rollout!, loss_crop_rollout!
-export daily_crop_winter_wheat_training_rollout!, daily_crop_C3_training_rollout!, daily_crop_maize_training_rollout!
+export daily_crop_C3_training!
 
 # DAILY CROP SIMULATIONS
 export daily_crop_C3!, daily_crop_C4!
@@ -137,7 +137,7 @@ include("neural_network/loss.jl")
 include("neural_network/training_loop.jl")
 
 ### Training
-include("training/daily_crop.jl")
+include("training/daily_crop_C3_training.jl")
 
 ### Utilities
 include("utilities/data_loader.jl")
