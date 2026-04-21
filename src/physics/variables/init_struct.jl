@@ -98,21 +98,44 @@ function init_pet(cell_size::Int,
 
 end
 
+function init_weather(cell_size::Int,
+                      device
+)
+    
+    dailyWeather = DailyWeather(
+        device(zeros(Float32, cell_size)),             # temp
+        device(zeros(Float32, cell_size)),             # prec
+        device(zeros(Float32, cell_size)),             # swr
+        device(zeros(Float32, cell_size)),             # lwr
+        device(zeros(Float32, cell_size)),             # temp_n
+        device(zeros(Float32, cell_size)),             # swr_n
+        device(zeros(Float32, cell_size)),             # lwr_n
+        device(zeros(Float32, cell_size)),             # daily CO2 concentration
+        device(zeros(Float32, 1))                      # annual CO2 concentration
+    )
+    
+    return dailyWeather
+
+end
+
+
 function init_climbuf(cell_size::Int,
                       device;
                       NDAYS = 31,
                       NMONTH = 12,
+                      NDAYS_YEAR = 365,
                       n = 5
 )
     
     climBuf = ClimBuf(
-        device(zeros(Float32, (NDAYS, cell_size))),    # temp
-        device(zeros(Float32, (NMONTH, cell_size))),   # mtemp
-        device(fill(-9999.0f0, (NMONTH, cell_size))),  # mtemp20
-        device(zeros(Float32, (n, cell_size))),        # min_temp
-        device(zeros(Float32, cell_size)),             # atemp_mean
-        device(zeros(Float32, cell_size)),             # V_req_a
-        device(fill(-9999.0f0, cell_size))             # V_req
+        device(zeros(Float32, (NDAYS, cell_size))),       # temp
+        device(zeros(Float32, (NMONTH, cell_size))),      # mtemp
+        device(fill(-9999.0f0, (NMONTH, cell_size))),     # mtemp20
+        device(zeros(Float32, (n, cell_size))),           # min_temp
+        device(zeros(Float32, (NDAYS_YEAR, cell_size))),  # atemp
+        device(zeros(Float32, cell_size)),                # atemp_mean
+        device(zeros(Float32, cell_size)),                # V_req_a
+        device(fill(-9999.0f0, cell_size))                # V_req
     )
     
     return climBuf
@@ -182,7 +205,10 @@ function init_soil(cell_size::Int,
         device(zeros(Float32, litc_layers)),               # respose_litn
         device(zeros(Float32, soil_layers)),               # respose_fastn
         device(zeros(Float32, soil_layers)),               # respose_slown
-        device(zeros(Float32, cell_size))                  # rh
+        device(zeros(Float32, cell_size)),                 # rh
+        device(zeros(Float32, cell_size)),                 # snowpack
+        device(zeros(Float32, cell_size)),                 # snowheight
+        device(zeros(Float32, cell_size))                  # snowfraction
     )
     
     return soil
