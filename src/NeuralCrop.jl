@@ -24,16 +24,16 @@ import Parameters: @with_kw, @unpack
 import MuladdMacro: @muladd
 
 # STRUCTURES
-export LPJmLParam, PftParameters, PhotoPar, SoilPar, Photos, PetPar, ClimBuf, Crop, Calendar, Managed_land, Soil, Output
+export LPJmLParams, PftParameters, PhotoParams, SoilParams, SnowParams, Photos, PetPar, DailyWeather, ClimBuf, CO2, Crop, Calendar, Managed_land, Soil, Output
 
 # PARAMETERS (PFTs)
-export lpjmlparam, photopar, soilpar, cft1, k1, cft2, k2, cft3, k3, cft4, k4
+export lpjmlparams, photoparams, soilparams, snowparams, cft1, cft2, cft3, cft4
 
 # INITIALIZATION
 export init_structs!, init_climbuf, init_crop, init_pet, init_soil, init_data_norm, init_output
 
-# CLIMBUF
-export annual_climbuf!, daily_climbuf!, infil_perc!, spin_up_climbuf!, update_climbuf!, readclimate!         
+# CLIMATE
+export annual_climbuf!, daily_climbuf!, infil_perc!, spin_up_climbuf!, update_climbuf!, readclimate!, snow!         
 
 # PHYSICS FUNCTIONS
 ### RADIATION
@@ -80,6 +80,7 @@ export daily_crop_C3!, daily_crop_C4!
 ### Variables
 include("physics/variables/define_structs.jl")
 include("physics/variables/default_param.jl")
+include("physics/variables/pft.jl")
 include("physics/variables/units.jl")
 include("physics/variables/init_var.jl")
 include("physics/variables/init_struct.jl")
@@ -92,6 +93,7 @@ include("physics/climate/climbuf.jl")
 include("physics/climate/temp_stress.jl")
 include("physics/climate/spinup_climbuf.jl")
 include("physics/climate/readclimate.jl")
+include("physics/climate/snow.jl")
 
 ### Crop
 include("physics/crop/cultivate.jl")
