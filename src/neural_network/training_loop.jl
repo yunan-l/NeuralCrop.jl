@@ -30,7 +30,7 @@ function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, 
             @unpack climate = data_batch
 
             InitialData = InitilDataLoader(data_batch, data_index, device)
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, InitialData, length(data_index), device)
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output = init_structs!(cft, InitialData, length(data_index), device)
             # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparams, length(data_index), device)
             
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
@@ -38,7 +38,7 @@ function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, 
             for day in 1:rollout:365*year
                 day_start = day
                 day_end = min(day+rollout-1, 365*year)
-                loss_p(ps) = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, output, device)
+                loss_p(ps) = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output, device)
                 l, gs = Zygote.withgradient(loss_p, ps)
                 if !isnan(l) && !isinf(l)
                     push!(loss_trian_rollout, l)
@@ -66,15 +66,15 @@ function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, 
             @unpack climate = data_batch
 
             InitialData = InitilDataLoader(data_batch, data_index, device)
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, InitialData, length(data_index), device)
-            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparams, length(data_index), device)
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output = init_structs!(cft, InitialData, length(data_index), device)
+            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output = init_structs!(lpjmlparams, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparams, length(data_index), device)
             
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
             loss_valid_rollout = []
             for day in 1:rollout:365*year
                 day_start = day
                 day_end = min(day+rollout-1, 365*year)
-                l = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, output, device)
+                l = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output, device)
                 push!(loss_valid_rollout, l)
             end
             push!(loss_valid, mean(loss_valid_rollout))
@@ -146,15 +146,15 @@ function train_loop_winter_wheat_rollout!(daily_crop, rollout, nn_model, ps, st,
             @unpack climate = data_batch
 
             InitialData = InitilDataLoader(data_batch, data_index, device)
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, InitialData, length(data_index), device)
-            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparams, length(data_index), device)
-            
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output = init_structs!(cft, InitialData, length(data_index), device)
+            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output = init_structs!(lpjmlparams, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparams, length(data_index), device)
+
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
             loss_trian_rollout = []
             for day in 1:rollout:365*year
                 day_start = day
                 day_end = min(day+rollout-1, 365*year)
-                loss_p(ps) = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, output, device)
+                loss_p(ps) = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output, device)
                 l, gs = Zygote.withgradient(loss_p, ps)
                 if !isnan(l) && !isinf(l)
                     push!(loss_trian_rollout, l)
@@ -182,14 +182,14 @@ function train_loop_winter_wheat_rollout!(daily_crop, rollout, nn_model, ps, st,
             @unpack climate = data_batch
 
             InitialData = InitilDataLoader(data_batch, data_index, device)
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, InitialData, length(data_index), device)
-            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparams, length(data_index), device)
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output = init_structs!(cft, InitialData, length(data_index), device)
+            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output = init_structs!(lpjmlparams, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparams, length(data_index), device)
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
             loss_valid_rollout = []
             for day in 1:rollout:365*year
                 day_start = day
                 day_end = min(day+rollout-1, 365*year)
-                l = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, output, device)
+                l = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output, device)
                 push!(loss_valid_rollout, l)
             end
             push!(loss_valid, mean(loss_valid_rollout))
@@ -261,14 +261,14 @@ function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, 
             @unpack climate = data_batch
 
             InitialData = InitilDataLoader(data_batch, data_index, device)
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, InitialData, length(data_index), device)
-            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparams, length(data_index), device)
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output = init_structs!(cft, InitialData, length(data_index), device)
+            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output = init_structs!(lpjmlparams, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparams, length(data_index), device)
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
             loss_trian_rollout = []
             for day in 1:rollout:365*year
                 day_start = day
                 day_end = min(day+rollout-1, 365*year)
-                loss_p(ps) = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, output, device)
+                loss_p(ps) = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output, device)
                 l, gs = Zygote.withgradient(loss_p, ps)
                 if !isnan(l) && !isinf(l)
                     push!(loss_trian_rollout, l)
@@ -296,15 +296,15 @@ function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, 
             @unpack climate = data_batch
 
             InitialData = InitilDataLoader(data_batch, data_index, device)
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, InitialData, length(data_index), device)
-            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparams, length(data_index), device)
-            
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output = init_structs!(cft, InitialData, length(data_index), device)
+            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output = init_structs!(lpjmlparams, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparams, length(data_index), device)
+
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
             loss_valid_rollout = []
             for day in 1:rollout:365*year_valid
                 day_start = day
                 day_end = min(day+rollout-1, 365*year_valid)
-                l = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, output, device)
+                l = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output, device)
                 push!(loss_valid_rollout, l)
             end
             push!(loss_valid, mean(loss_valid_rollout))
@@ -377,15 +377,15 @@ function train_loop_winter_wheat_rollout!(daily_crop, rollout, nn_model, ps, st,
             @unpack climate = data_batch
             
             InitialData = InitilDataLoader(data_batch, data_index, device)
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, InitialData, length(data_index), device)
-            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparams, length(data_index), device)
-            
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output = init_structs!(cft, InitialData, length(data_index), device)
+            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output = init_structs!(lpjmlparams, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparams, length(data_index), device)
+
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
             loss_trian_rollout = []
             for day in 1:rollout:365*year
                 day_start = day
                 day_end = min(day+rollout-1, 365*year)
-                loss_p(ps) = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, output, device)
+                loss_p(ps) = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output, device)
                 l, gs = Zygote.withgradient(loss_p, ps)
                 if !isnan(l) && !isinf(l)
                     push!(loss_trian_rollout, l)
@@ -413,15 +413,15 @@ function train_loop_winter_wheat_rollout!(daily_crop, rollout, nn_model, ps, st,
             @unpack climate, lpjml, soilparams = data_batch
             
             InitialData = InitilDataLoader(data_batch, data_index, device)
-            climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, InitialData, length(data_index), device)
-            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, output = init_structs!(lpjmlparams, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparams, length(data_index), device)
+            climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output = init_structs!(cft, InitialData, length(data_index), device)
+            # climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output = init_structs!(lpjmlparams, cft, lpjml.crop.phu, lpjml.crop.sdate, lpjml.crop.manure, lpjml.crop.fertilizer, lpjml.c_shift_fast, lpjml.c_shift_slow, lpjml.u0, soilparams, length(data_index), device)
             
             spin_up_climbuf!(cft, climate.temp_spinup, climbuf, 1, device)
             loss_valid_rollout = []
             for day in 1:rollout:365*year_valid
                 day_start = day
                 day_end = min(day+rollout-1, 365*year_valid)
-                l = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, output, device)
+                l = loss_func(daily_crop, day_start, day_end, nn_model, ps, st, parameters, data_batch, length(data_index),  climbuf, crop, crop_cal, photos, pet, soil, managed_land, dailyWeather, output, device)
                 push!(loss_valid_rollout, l)
             end
             push!(loss_valid, mean(loss_valid_rollout))
