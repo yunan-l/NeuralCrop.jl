@@ -1,9 +1,9 @@
-function soil_carbon!(param::LPJmLParam,
-                      crop_cal::Calendar,
-                      soil::Soil
+function soil_carbon!(crop_cal::Calendar,
+                      soil::Soil;
+                      lpjmlparams::LPJmLParams = lpjmlparams
 )
 
-    @unpack atmfrac = param
+    @unpack atmfrac = lpjmlparams
 
     # compute soil carbon: litter carbon and soil carbon
     soil.decom_litc = (1.0f0 .- exp.(-soil.respose_litc / 100)) .* soil.litc

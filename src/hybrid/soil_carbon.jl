@@ -1,14 +1,14 @@
 function soil_carbon!(nn_model,
                       ps,
                       st,
-                      param::LPJmLParam,
                       temp_n::AbstractArray{T},
                       sw_n::AbstractArray{T},
                       crop_cal::Calendar,
-                      soil::Soil
+                      soil::Soil;
+                      lpjmlparams::LPJmLParams = lpjmlparams
 ) where {T <: AbstractFloat}
 
-    @unpack atmfrac = param
+    @unpack atmfrac = lpjmlparams
 
     # compute soil carbon: litter carbon and soil carbon
     input = vcat(reshape((soil.swc./soil.layer_depth)[1, :], (1, :)), reshape(temp_n, (1, :)))

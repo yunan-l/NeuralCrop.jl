@@ -1,12 +1,12 @@
 function respiration!(crop::Crop,
                       PFT::PftParameters,
-                      param::LPJmLParam,
                       temp::AbstractArray{T},
-                      assim::AbstractArray{T}
+                      assim::AbstractArray{T};
+                      lpjmlparams::LPJmLParams = lpjmlparams
 ) where {T <: AbstractFloat}
     
     @unpack respcoeff, nc_ratio = PFT
-    @unpack k, r_growth, e0, temp_response = param
+    @unpack k, r_growth, e0, temp_response = lpjmlparams
     
     # kernel based
     gtemp_air = similar(temp)

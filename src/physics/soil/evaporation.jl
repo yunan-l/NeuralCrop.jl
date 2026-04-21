@@ -1,7 +1,7 @@
 function evaporation!(pet_eeq::AbstractArray{T},
-                      param::LPJmLParam,
                       crop::Crop,
-                      soil::Soil
+                      soil::Soil;
+                      lpjmlparams::LPJmLParams = lpjmlparams
     
 ) where {T <: AbstractFloat}
 
@@ -10,7 +10,7 @@ function evaporation!(pet_eeq::AbstractArray{T},
     kernel = evaporation_kernel!(backend)
     
     kernel(pet_eeq, 
-           param, 
+           lpjmlparams, 
            crop.fpar, 
            crop.trans_layer,
            crop.canopy_wet, 
@@ -27,7 +27,7 @@ function evaporation!(pet_eeq::AbstractArray{T},
 end
 
 @kernel function evaporation_kernel!(pet_eeq::AbstractArray{T},
-                                     param::LPJmLParam,
+                                     lpjmlparams::LPJmLParams,
                                      crop_fpar::AbstractArray{T},
                                      crop_trans_layer::AbstractArray{M},
                                      crop_canopy_wet::AbstractArray{T},

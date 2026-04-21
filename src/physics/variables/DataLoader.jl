@@ -5,7 +5,7 @@ function InitilDataLoader(data::NamedTuple,
 )
 
 
-    @unpack latitude, crop, soilparam, lpjml = data
+    @unpack latitude, crop, soilparams, lpjml = data
     
     latitude_set = latitude[data_index] |> device
     
@@ -17,15 +17,15 @@ function InitilDataLoader(data::NamedTuple,
         residuefrac = crop.residuefrac[data_index]
     ) |> device
 
-    soilparam = (
-        ph = soilparam.soilph[data_index],
-        w_sat = soilparam.w_sat[:, data_index],
-        sand = reshape(soilparam.sand[data_index], (1, :)),
-        clay = reshape(soilparam.clay[data_index], (1, :)),
-        # silt = soilparam.silt[data_index],
-        tdiff_0 = soilparam.tdiff_0[data_index],
-        tdiff_15 = soilparam.tdiff_15[data_index],
-        soildepth = soilparam.soildepth,
+    soilparams = (
+        ph = soilparams.soilph[data_index],
+        w_sat = soilparams.w_sat[:, data_index],
+        sand = reshape(soilparams.sand[data_index], (1, :)),
+        clay = reshape(soilparams.clay[data_index], (1, :)),
+        # silt = soilparams.silt[data_index],
+        tdiff_0 = soilparams.tdiff_0[data_index],
+        tdiff_15 = soilparams.tdiff_15[data_index],
+        soildepth = soilparams.soildepth,
     ) |> device
       
     u0_set = (
@@ -64,7 +64,7 @@ function InitilDataLoader(data::NamedTuple,
     data_set = (
         latitude = latitude_set,
         lpjml = lpjml,
-        soilparam = soilparam
+        soilparams = soilparams
     )
 
     return data_set
@@ -101,7 +101,7 @@ function DataLoader(data::NamedTuple,
 )
 
 
-    @unpack latitude, crop, climate, soilparam, lpjml = data
+    @unpack latitude, crop, climate, soilparams, lpjml = data
     
     latitude_set = latitude[data_index] |> device
     
@@ -131,15 +131,15 @@ function DataLoader(data::NamedTuple,
         # σ = σ_set,
     ) |> device
 
-    soilparam = (
-        ph = soilparam.soilph[data_index],
-        w_sat = soilparam.w_sat[:, data_index],
-        sand = reshape(soilparam.sand[data_index], (1, :)),
-        clay = reshape(soilparam.clay[data_index], (1, :)),
-        # silt = soilparam.silt[data_index],
-        tdiff_0 = soilparam.tdiff_0[data_index],
-        tdiff_15 = soilparam.tdiff_15[data_index],
-        soildepth = soilparam.soildepth,
+    soilparams = (
+        ph = soilparams.soilph[data_index],
+        w_sat = soilparams.w_sat[:, data_index],
+        sand = reshape(soilparams.sand[data_index], (1, :)),
+        clay = reshape(soilparams.clay[data_index], (1, :)),
+        # silt = soilparams.silt[data_index],
+        tdiff_0 = soilparams.tdiff_0[data_index],
+        tdiff_15 = soilparams.tdiff_15[data_index],
+        soildepth = soilparams.soildepth,
     ) |> device
     
     vegc_n = (hcat(lpjml.vegc[data_index]...) .- reshape(lpjml.μ.vegc[:, data_index], (1, :))) ./ (reshape(lpjml.σ.vegc[:, data_index], (1, :)) - reshape(lpjml.μ.vegc[:, data_index], (1, :)))
@@ -196,7 +196,7 @@ function DataLoader(data::NamedTuple,
         latitude = latitude_set,
         climate = climate,
         lpjml = lpjml,
-        soilparam = soilparam
+        soilparams = soilparams
     )
 
     return data_set
@@ -208,7 +208,7 @@ function DataLoader_winter_wheat(data::NamedTuple,
                                  device
 )
 
-    @unpack latitude, crop, climate, soilparam, lpjml = data
+    @unpack latitude, crop, climate, soilparams, lpjml = data
     
     latitude_set = latitude[data_index] |> device
     
@@ -239,15 +239,15 @@ function DataLoader_winter_wheat(data::NamedTuple,
         # σ = σ_set,
     ) |> device
 
-    soilparam = (
-        ph = soilparam.soilph[data_index],
-        w_sat = soilparam.w_sat[:, data_index],
-        sand = reshape(soilparam.sand[data_index], (1, :)),
-        clay = reshape(soilparam.clay[data_index], (1, :)),
-        # silt = soilparam.silt[data_index],
-        tdiff_0 = soilparam.tdiff_0[data_index],
-        tdiff_15 = soilparam.tdiff_15[data_index],
-        soildepth = soilparam.soildepth,
+    soilparams = (
+        ph = soilparams.soilph[data_index],
+        w_sat = soilparams.w_sat[:, data_index],
+        sand = reshape(soilparams.sand[data_index], (1, :)),
+        clay = reshape(soilparams.clay[data_index], (1, :)),
+        # silt = soilparams.silt[data_index],
+        tdiff_0 = soilparams.tdiff_0[data_index],
+        tdiff_15 = soilparams.tdiff_15[data_index],
+        soildepth = soilparams.soildepth,
     ) |> device
     
     vegc_n = (hcat(lpjml.vegc[data_index]...) .- reshape(lpjml.μ.vegc[:, data_index], (1, :))) ./ (reshape(lpjml.σ.vegc[:, data_index], (1, :)) - reshape(lpjml.μ.vegc[:, data_index], (1, :)))
@@ -309,7 +309,7 @@ function DataLoader_winter_wheat(data::NamedTuple,
         latitude = latitude_set,
         climate = climate,
         lpjml = lpjml,
-        soilparam = soilparam
+        soilparams = soilparams
     )
 
     return data_set

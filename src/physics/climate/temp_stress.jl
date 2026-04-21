@@ -1,16 +1,15 @@
 function temp_stress(PFT::PftParameters,
-                     photopar::PhotoPar,
                      pet::PetPar,
                      photos::Photos,
-                     k::K,
-                     temp::AbstractArray{T}
+                     temp::AbstractArray{T};
+                     photoparams::PhotoParams = photoparams,
 ) where {T <: AbstractFloat}
 
     backend = KernelAbstractions.get_backend(temp)
     
     kernel = temp_stress_kernel!(backend)
     
-    kernel(pet.daylength, temp, photos.tstress, k, photopar, PFT, ndrange=length(photos.tstress))
+    kernel(pet.daylength, temp, photos.tstress, photoparams, PFT, ndrange=length(photos.tstress))
     
     KernelAbstractions.synchronize(backend)
   
@@ -20,17 +19,19 @@ end
 @kernel function temp_stress_kernel!(pet_daylength::AbstractArray{T},           
                                      temp::AbstractArray{T},           
                                      photos_tstress::AbstractArray{T},            
-                                     k::K,
-                                     photopar::PhotoPar,
-                                     PFT::PftParameters
+                                     PFT::PftParameters;
+                                     photoparams::PhotoParams = photoparams
 ) where {T <: AbstractFloat}
     
     cell = @index(Global)
 
     @unpack path, temp_co2, temp_photos = PFT
-    @unpack k1, k2, k3 = k
-    @unpack tmc3, tmc4 = photopar
+    @unpack tmc3, tmc4 = photoparams
     
+    k1 = T(2 * log(1 / 0.99 - 1)) / (temp_co2.low - temp_photos.low)
+    k2 = temp_co2.low + temp_photos.low * T(0.5)
+    k3 = T(log(0.99 / 0.01)) / (temp_co2.high - temp_photos.high)
+
     if pet_daylength[cell] < 0.01 || (path == 1 && temp[cell] > tmc3) || (path == 2 && temp[cell] > tmc4) # path == 1 : C3; path == 2 : C4
         photos_tstress[cell] = zero(T)
     else

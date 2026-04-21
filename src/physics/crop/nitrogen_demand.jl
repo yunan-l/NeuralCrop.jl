@@ -1,9 +1,9 @@
 function ndemand_crop!(crop::Crop,
                        PFT::PftParameters,
-                       param::LPJmLParam,
                        photos_vmax::AbstractArray{T},
                        pet_daylength::AbstractArray{T},
-                       temp::AbstractArray{T}
+                       temp::AbstractArray{T};
+                       lpjmlparams::LPJmLParams = lpjmlparams
 ) where {T <: AbstractFloat}
 
     backend = KernelAbstractions.get_backend(crop.ndemand_tot)
@@ -11,7 +11,7 @@ function ndemand_crop!(crop::Crop,
     kernel = ndemand_crop_kernel!(backend)
     
     kernel(PFT, 
-           param, 
+           lpjmlparams, 
            crop.lai, 
            crop.leafc, 
            crop.rootc, 
@@ -30,7 +30,7 @@ function ndemand_crop!(crop::Crop,
 end
 
 @kernel function ndemand_crop_kernel!(PFT::PftParameters,
-                                      param::LPJmLParam,
+                                      lpjmlparams::LPJmLParams,
                                       crop_lai::AbstractArray{T},
                                       crop_leafc::AbstractArray{T},
                                       crop_rootc::AbstractArray{T},
@@ -47,7 +47,7 @@ end
     
     cell = @index(Global)
     
-    @unpack p, k_temp = param
+    @unpack p, k_temp = lpjmlparams
     @unpack fpc, intc, ratio, ncleaf = PFT
 
     if crop_isgrowing[cell] == 1

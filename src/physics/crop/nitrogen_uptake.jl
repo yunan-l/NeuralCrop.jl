@@ -1,7 +1,7 @@
 function nuptake_crop!(crop::Crop,
                        PFT::PftParameters,
-                       param::LPJmLParam,
-                       soil::Soil
+                       soil::Soil;
+                       lpjmlparams::LPJmLParams = lpjmlparams
 )
 
     backend = KernelAbstractions.get_backend(crop.nitrogen)
@@ -9,7 +9,7 @@ function nuptake_crop!(crop::Crop,
     kernel = nuptake_crop_kernel!(backend)
     
     kernel(PFT,
-           param,
+           lpjmlparams,
            crop.leafn,
            crop.leafc,
            crop.rootn,
@@ -33,7 +33,7 @@ function nuptake_crop!(crop::Crop,
 end
 
 @kernel function nuptake_crop_kernel!(PFT::PftParameters,
-                                      param::LPJmLParam,
+                                      lpjmlparams::LPJmLParams,
                                       crop_leafn::AbstractArray{T},
                                       crop_leafc::AbstractArray{T},
                                       crop_rootn::AbstractArray{T},
@@ -56,7 +56,7 @@ end
     
     cell = @index(Global)
     
-    @unpack T_0, T_m, T_r = param
+    @unpack T_0, T_m, T_r = lpjmlparams
     @unpack ncleaf, knstore, vmax_up, kNmin, KNmin = PFT
 
     if crop_isgrowing[cell] == 1

@@ -1,18 +1,18 @@
 # using CUDA
 function photosynthesis_C3!(PFT::PftParameters,
-                            param::LPJmLParam,
-                            photopar::PhotoPar,
                             photos::Photos,
                             apar::AbstractArray{T},
                             pet_daylength::AbstractArray{T},
                             temp::AbstractArray{T},
                             co2::AbstractArray{T};
+                            lpjmlparams::LPJmLParams = lpjmlparams,
+                            photoparams::PhotoParams = photoparams,
                             comp_vmax = false # compute vmax internally
 ) where {T <: AbstractFloat}
     
     @unpack b = PFT
-    @unpack ko25, kc25, alphac3, theta = param
-    @unpack q10ko, q10kc, po2, tau25, q10tau, cmass, cq, p, lambdamc3 = photopar
+    @unpack ko25, kc25, alphac3, theta = lpjmlparams
+    @unpack q10ko, q10kc, po2, tau25, q10tau, cmass, cq, p, lambdamc3 = photoparams
     
     ko = ko25 * q10ko .^ ((temp .- T(25.0)) * T(0.1))
     kc = kc25 * q10kc .^ ((temp .- T(25.0)) * T(0.1))
@@ -81,18 +81,18 @@ end
 
 
 function photosynthesis_C4!(PFT::PftParameters,
-                            param::LPJmLParam,
-                            photopar::PhotoPar,
                             photos::Photos,
                             apar::AbstractArray{T},
                             pet_daylength::AbstractArray{T},
                             temp::AbstractArray{T};
+                            lpjmlparams::LPJmLParams = lpjmlparams,
+                            photoparams::PhotoParams = photoparams,
                             comp_vmax = false # compute vmax internally
 ) where {T <: AbstractFloat}
     
     @unpack b = PFT
-    @unpack alphac4, theta = param
-    @unpack lambdamc4, cmass, cq, p = photopar
+    @unpack alphac4, theta = lpjmlparams
+    @unpack lambdamc4, cmass, cq, p = photoparams
     
     #   Parameter accounting for effect of reduced intercellular CO2
     #   concentration on photosynthesis, Phipi.

@@ -1,9 +1,7 @@
 function hybrid_photos_C3!(nn_model,
                            ps,
                            st,
-                           param::LPJmLParam,
                            PFT::PftParameters,
-                           photopar::PhotoPar,
                            photos::Photos,
                            crop::Crop,
                            pet_daylength::AbstractArray{T},
@@ -21,7 +19,7 @@ function hybrid_photos_C3!(nn_model,
     photos.vmax = neural_vmax(nn_model.vmax, ps.ps_vmax, st.st_vmax, input)
 
     # compute photosynthesis
-    photosynthesis_C3!(PFT, param, photopar, photos, crop.apar, pet_daylength, temp, co2)
+    photosynthesis_C3!(PFT, photos, crop.apar, pet_daylength, temp, co2)
 
     # photos.adt = photos.adt .* crop.isgrowing
     # photos.adtmm = photos.adtmm .* crop.isgrowing
@@ -33,9 +31,7 @@ end
 function hybrid_photos_C4!(nn_model,
                            ps,
                            st,
-                           param::LPJmLParam,
                            PFT::PftParameters,
-                           photopar::PhotoPar,
                            photos::Photos,
                            crop::Crop,
                            pet_daylength::AbstractArray{T},
@@ -53,7 +49,7 @@ function hybrid_photos_C4!(nn_model,
     photos.vmax = neural_vmax(nn_model.vmax, ps.ps_vmax, st.st_vmax, input)
 
     # compute photosynthesis
-    photosynthesis_C4!(PFT, param, photopar, photos, crop.apar, pet_daylength, temp)
+    photosynthesis_C4!(PFT, photos, crop.apar, pet_daylength, temp)
 
     # photos.adt = photos.adt .* crop.isgrowing
     # photos.adtmm = photos.adtmm .* crop.isgrowing

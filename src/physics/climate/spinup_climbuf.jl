@@ -17,18 +17,19 @@ end
 
 function update_climbuf!(PFT::PftParameters, 
                          temp::AbstractArray{T},
-                         climate_temp::AbstractArray{M},
                          climbuf::ClimBuf,
                          day::Integer,
                          device
-)where {T <: AbstractFloat, M <: AbstractFloat, }
+)where {T <: AbstractFloat}
 
     daily_climbuf!(temp, climbuf.temp)
 
     if day > 1 && day % 365 == 1
-        year_temp = climate_temp[day-365:day-1, :]
+        # year_temp = climate_temp[day-365:day-1, :]
         climbuf.V_req_a .= 0.0f0
-        annual_climbuf!(year_temp, climbuf, PFT, device)
+        annual_climbuf!(climbuf.atemp, climbuf, PFT, device)
     end
+    
+    climbuf.atemp[day % 365, :] .= temp
 
 end

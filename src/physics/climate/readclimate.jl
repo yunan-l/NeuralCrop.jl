@@ -1,36 +1,34 @@
 function readclimate!(climate::NamedTuple,
+                      dailyWeather::DailyWeather,
                       day::Integer
 )
 
-    temp = climate.temp[day, :]
-    prec = climate.prec[day, :]
-    swr = climate.sw[day, :]
-    lwr = climate.lw[day, :]
-    temp_n = climate.temp_n[day, :]
-    # prec_n = climate.prec_n[day, :]
-    swr_n = climate.sw_n[day, :]
-    lwr_n = climate.lw_n[day, :]
-    co2 = ppm2Pa(climate.co2[[div(day-1, 365) + 1]])
-
-    return temp, prec, swr, lwr, temp_n, swr_n, lwr_n, co2
+    dailyWeather.temp = climate.temp[day, :]
+    dailyWeather.prec = climate.prec[day, :]
+    dailyWeather.swr = climate.sw[day, :]
+    dailyWeather.lwr = climate.lw[day, :]
+    dailyWeather.temp_n = climate.temp_n[day, :]
+    # dailyWeather.prec_n = climate.prec_n[day, :]
+    dailyWeather.swr_n = climate.sw_n[day, :]
+    dailyWeather.lwr_n = climate.lw_n[day, :]
+    dailyWeather.annual_co2 = ppm2Pa(climate.co2[[div(day-1, 365) + 1]])
 
 end
 
 function readclimate!(climate::NamedTuple,
-                      co2::AbstractArray{T}, 
+                      dailyWeather::DailyWeather,
+                      CO2::AbstractArray{T}, 
                       day::Integer
 ) where {T <: AbstractFloat}
 
-    temp = climate.temp[day, :]
-    prec = climate.prec[day, :]
-    swr = climate.sw[day, :]
-    lwr = climate.lw[day, :]
-    temp_n = climate.temp_n[day, :]
-    prec_n = climate.prec_n[day, :]
-    swr_n = climate.sw_n[day, :]
-    lwr_n = climate.lw_n[day, :]
-    co2 = ppm2Pa(co2[day, :])
-
-    return temp, prec, swr, lwr, temp_n, prec_n, swr_n, lwr_n, co2
-
+    dailyWeather.temp = climate.temp[day, :]
+    dailyWeather.prec = climate.prec[day, :]
+    dailyWeather.swr = climate.sw[day, :]
+    dailyWeather.lwr = climate.lw[day, :]
+    dailyWeather.temp_n = climate.temp_n[day, :]
+    # dailyWeather.prec_n = climate.prec_n[day, :]
+    dailyWeather.swr_n = climate.sw_n[day, :]
+    dailyWeather.lwr_n = climate.lw_n[day, :]
+    dailyWeather.daily_co2 = ppm2Pa(CO2[day, :])
+    
 end

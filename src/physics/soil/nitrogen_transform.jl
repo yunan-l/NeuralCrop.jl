@@ -1,11 +1,11 @@
 function nitrogen_transform!(soil::Soil,
-                             parm::LPJmLParam,
                              c_shift_fast::AbstractArray{T},
-                             c_shift_slow::AbstractArray{T},
+                             c_shift_slow::AbstractArray{T};
+                             lpjmlparams::LPJmLParams = lpjmlparams,
                              k_l = 0.0f0 # Parton et al., 2001 equ. 2
 ) where {T <: AbstractFloat}
 
-    @unpack fastfrac, atmfrac, k_soil10 = parm
+    @unpack fastfrac, atmfrac, k_soil10 = lpjmlparams
 
     # NO3 and N2O from mineralization of litter organic matter
     F_Nmineral = sum(soil.decom_litn, dims = 1) * atmfrac .* (fastfrac * c_shift_fast + (1.0f0 - fastfrac) * c_shift_slow);
@@ -20,13 +20,13 @@ function nitrogen_transform!(soil::Soil,
     # immobilization of N
     backend = KernelAbstractions.get_backend(soil.NH4)
     kernel = immobilize_kernel!(backend)
-    kernel(soil.NH4, soil.NO3, c_shift_fast, c_shift_slow, soil.layer_depth, parm, ndrange=size(soil.NH4, 1))
+    kernel(soil.NH4, soil.NO3, c_shift_fast, c_shift_slow, soil.layer_depth, lpjmlparams, ndrange=size(soil.NH4, 1))
     KernelAbstractions.synchronize(backend)
 
     # NO3 and N2O from nitrification
     backend = KernelAbstractions.get_backend(soil.NH4)
     kernel = nitrify_kernel!(backend)
-    kernel(soil.NH4, soil.NO3, soil.swc, soil.wsats, soil.temp, soil.ph, parm, ndrange=size(soil.NH4, 1))
+    kernel(soil.NH4, soil.NO3, soil.swc, soil.wsats, soil.temp, soil.ph, lpjmlparams, ndrange=size(soil.NH4, 1))
     KernelAbstractions.synchronize(backend)
 
 end
@@ -38,7 +38,7 @@ end
                                     c_shift_fast::AbstractArray{T},
                                     c_shift_slow::AbstractArray{T},
                                     soil_layer_depth::AbstractArray{T}, 
-                                    parm::LPJmLParam;
+                                    parm::LPJmLParams;
                                     cn_ratio = 15,
                                     soil_layers = 5,
                                     k_N = 5f-3
@@ -86,7 +86,7 @@ end
                                  soil_wsats::AbstractArray{M},
                                  soil_temp::AbstractArray{M},
                                  soil_ph::AbstractArray{T},
-                                 parm::LPJmLParam;
+                                 parm::LPJmLParams;
                                  a_nit = 0.45f0,
                                  b_nit = 1.27f0,
                                  c_nit = 0.0012f0,

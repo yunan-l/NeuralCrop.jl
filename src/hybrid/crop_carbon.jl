@@ -5,15 +5,14 @@ function crop_carbon_node!(nn_model,
                            photos::Photos,
                            crop::Crop,
                            PFT::PftParameters,
-                           param::LPJmLParam,
                            temp::AbstractArray{T},
                            temp_n::AbstractArray{T},
-                           soil_swc::AbstractArray{M},
+                           soil_swc::AbstractArray{M}
 ) where {T <: AbstractFloat, M <: AbstractFloat}
 
     # compute crop respiration
     Zygote.ignore() do
-        respiration!(crop, PFT, param, temp, photos.agd - photos.rd)
+        respiration!(crop, PFT, temp, photos.agd - photos.rd)
     end
 
     # compute crop carbon allocation
@@ -40,15 +39,15 @@ function crop_carbon_hybrid!(nn_model,
                              photos::Photos,
                              crop::Crop,
                              PFT::PftParameters,
-                             param::LPJmLParam,
                              temp::AbstractArray{T},
                              temp_n::AbstractArray{T},
-                             soil_swc::AbstractArray{M},
+                             soil_swc::AbstractArray{M};
+                             lpjmlparams::LPJmLParams = lpjmlparams
 ) where {T <: AbstractFloat, M <: AbstractFloat}
 
     # compute crop respiration
     Zygote.ignore() do
-        respiration!(crop, PFT, param, temp, photos.agd - photos.rd)
+        respiration!(crop, PFT, lpjmlparams, temp, photos.agd - photos.rd)
     end
 
     # compute crop root and leaf carbon allocation
@@ -104,27 +103,27 @@ function carbon_allocation_root_leaf!(PFT::PftParameters,
 end
 
 @kernel function carbon_allocation_leaf_root_kernel!(PFT::PftParameters,
-                                           crop_isgrowing::AbstractArray{S},
-                                           crop_growingdays::AbstractArray{S},
-                                           crop_vscal_sum::AbstractArray{T},
-                                           crop_vscal::AbstractArray{T},
-                                           crop_ndf::AbstractArray{T},
-                                           crop_wdf::AbstractArray{T},
-                                           crop_fphu::AbstractArray{T},
-                                           crop_senescence::AbstractArray{B},
-                                           crop_biomass::AbstractArray{T},
-                                           crop_resp::AbstractArray{T},
-                                           photos_agd::AbstractArray{T},
-                                           photos_rd::AbstractArray{T},
-                                           crop_npp::AbstractArray{T},
-                                           crop_lai::AbstractArray{T},
-                                           crop_leafc::AbstractArray{T},
-                                           crop_rootc::AbstractArray{T},
-                                           crop_stoc::AbstractArray{T},
-                                           crop_poolc::AbstractArray{T},
-                                           crop_lai_nppdeficit::AbstractArray{T};
-                                           FROOTMAX = 0.4f0,
-                                           FROOTMIN = 0.3f0
+                                                     crop_isgrowing::AbstractArray{S},
+                                                     crop_growingdays::AbstractArray{S},
+                                                     crop_vscal_sum::AbstractArray{T},
+                                                     crop_vscal::AbstractArray{T},
+                                                     crop_ndf::AbstractArray{T},
+                                                     crop_wdf::AbstractArray{T},
+                                                     crop_fphu::AbstractArray{T},
+                                                     crop_senescence::AbstractArray{B},
+                                                     crop_biomass::AbstractArray{T},
+                                                     crop_resp::AbstractArray{T},
+                                                     photos_agd::AbstractArray{T},
+                                                     photos_rd::AbstractArray{T},
+                                                     crop_npp::AbstractArray{T},
+                                                     crop_lai::AbstractArray{T},
+                                                     crop_leafc::AbstractArray{T},
+                                                     crop_rootc::AbstractArray{T},
+                                                     crop_stoc::AbstractArray{T},
+                                                     crop_poolc::AbstractArray{T},
+                                                     crop_lai_nppdeficit::AbstractArray{T};
+                                                     FROOTMAX = 0.4f0,
+                                                     FROOTMIN = 0.3f0
 ) where {T <: AbstractFloat, B <: Bool, S <: Integer}
 
     cell = @index(Global)

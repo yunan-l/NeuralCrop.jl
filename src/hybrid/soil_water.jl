@@ -1,17 +1,17 @@
 function soil_water!(nn_model,
                      ps,
                      st,
-                     parm::LPJmLParam,
                      soil::Soil,
                      crop::Crop,
                      prec::AbstractArray{T},
                      sw_n::AbstractArray{T},
-                     lw_n::AbstractArray{T}
+                     lw_n::AbstractArray{T};
+                     lpjmlparams::LPJmLParams = lpjmlparams
 ) where {T <: AbstractFloat}
 
     Zygote.ignore() do
         soil.infil .= prec - crop.intercep
-        infil_perc!(parm, soil)
+        infil_perc!(soil)
     end
 
     #compute soil water content

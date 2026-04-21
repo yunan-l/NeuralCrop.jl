@@ -1,12 +1,12 @@
 function crop_carbon!(photos::Photos,
                       crop::Crop,
                       PFT::PftParameters,
-                      param::LPJmLParam,
-                      temp::AbstractArray{T},
+                      temp::AbstractArray{T};
+                      lpjmlparams::LPJmLParams = lpjmlparams
 ) where {T <: AbstractFloat} # directly translated from LPJmL
 
     # compute crop respiration
-    respiration!(crop, PFT, param, temp, photos.agd - photos.rd)
+    respiration!(crop, PFT, temp, photos.agd - photos.rd)
 
     # compute crop carbon allocation  
     carbon_allocation!(PFT, crop, photos)

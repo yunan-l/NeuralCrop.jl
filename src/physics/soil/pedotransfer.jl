@@ -1,8 +1,8 @@
-function pedotransfer!(soil::Soil,
-                       param::LPJmLParam
+function pedotransfer!(soil::Soil;
+                       lpjmlparams::LPJmLParams = lpjmlparams
 )
 
-    @unpack MINERALDENS = param # mineral density in kg/m3
+    @unpack MINERALDENS = lpjmlparams # mineral density in kg/m3
 
     om_layer = 2 * ((soil.fastc + soil.slowc) ./ ((1 .- soil.wsat) * MINERALDENS .* soil.layer_depth)) * 100 #calculation of soil organic matter in % 
     

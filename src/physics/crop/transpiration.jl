@@ -1,13 +1,13 @@
 function transpiration!(photos_adtmm::AbstractArray{T},
-                        param::LPJmLParam,
                         PFT::PftParameters,
                         crop::Crop,
                         pet::PetPar,
                         soil::Soil,
-                        co2::AbstractArray{T}
+                        co2::AbstractArray{T};
+                        lpjmlparams::LPJmLParams = lpjmlparams
 ) where {T <: AbstractFloat}
 
-    @unpack LAMBDA_OPT = param
+    @unpack LAMBDA_OPT = lpjmlparams
 
     crop.gp = (1.6f0 * photos_adtmm ./ (ppm2bar(co2) * (1 - LAMBDA_OPT) .* hour2sec(pet.daylength))) .+ crop.fpar # potential canopy conductance
 
@@ -20,7 +20,7 @@ function transpiration!(photos_adtmm::AbstractArray{T},
 
     kernel = water_demand_supply_kernel!(backend)
     
-    kernel(param, 
+    kernel(lpjmlparams, 
            PFT, 
            crop.trans_layer, 
            crop.w_demandsum,
@@ -42,7 +42,7 @@ function transpiration!(photos_adtmm::AbstractArray{T},
 
 end
 
-@kernel function water_demand_supply_kernel!(param::LPJmLParam,
+@kernel function water_demand_supply_kernel!(lpjmlparams::LPJmLParams,
                                              PFT::PftParameters,
                                              crop_trans_layer::AbstractArray{T},
                                              crop_w_demandsum::AbstractArray{T},
@@ -63,7 +63,7 @@ end
     
     cell = @index(Global)
 
-    @unpack ALPHAM, GM = param
+    @unpack ALPHAM, GM = lpjmlparams
     @unpack fpc, emax = PFT
 
     if crop_isgrowing[cell] == 1

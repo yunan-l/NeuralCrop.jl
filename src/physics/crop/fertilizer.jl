@@ -1,16 +1,16 @@
-function fertilizer!(param::LPJmLParam,
-                     crop_cal::Calendar,
+function fertilizer!(crop_cal::Calendar,
                      ml::Managed_land,
                      crop::Crop,
                      soil::Soil,
-                     day
+                     day;
+                     lpjmlparams::LPJmLParams = lpjmlparams,
 )
 
     backend = KernelAbstractions.get_backend(crop.nfertilizer)
 
     kernel = fertilizer_kernel!(backend)
     
-    kernel(param,
+    kernel(lpjmlparams,
            crop_cal.sdate,
            ml.manure,
            ml.fertilizer,
@@ -27,7 +27,7 @@ function fertilizer!(param::LPJmLParam,
 end
 
 
-@kernel function fertilizer_kernel!(param::LPJmLParam,
+@kernel function fertilizer_kernel!(lpjmlparams::LPJmLParams,
                                     crop_cal_sdate::AbstractArray{S},
                                     ml_manure::AbstractArray{T},
                                     ml_fertilizer::AbstractArray{T},
@@ -42,7 +42,7 @@ end
     
     cell = @index(Global)
 
-    @unpack nmanure_nh4_frac, nfert_split_frac, nfert_no3_frac = param
+    @unpack nmanure_nh4_frac, nfert_split_frac, nfert_no3_frac = lpjmlparams
 
     if crop_cal_sdate[cell] == day
         soil_NH4[1, cell] += ml_manure[cell] * nmanure_nh4_frac * nfert_split_frac

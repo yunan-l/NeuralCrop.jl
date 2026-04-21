@@ -1,5 +1,5 @@
-function infil_perc!(parm::LPJmLParam,
-                     soil::Soil  
+function infil_perc!(soil::Soil;
+                    lpjmlparams::LPJmLParams = lpjmlparams
 )
 
     backend = KernelAbstractions.get_backend(soil.infil)
@@ -25,7 +25,7 @@ function infil_perc!(parm::LPJmLParam,
            soil.beta_soil,
            soil.NO3,
            soil.layer_depth,
-           parm, 
+           lpjmlparams, 
            ndrange=length(soil.infil)
     )
 
@@ -52,7 +52,7 @@ end
                                     soil_beta_soil::AbstractArray{M},
                                     soil_NO3::AbstractArray{M},
                                     soil_layer_depth::AbstractArray{T},
-                                    parm::LPJmLParam;
+                                    lpjmlparams::LPJmLParams;
                                     soil_layers = 5,
                                     anion_excl = 0.3,
                                     NPERCO = 0.4
@@ -60,7 +60,7 @@ end
     
     cell = @index(Global)
 
-    @unpack soil_infil, soil_infil_litter, percthres = parm
+    @unpack soil_infil, soil_infil_litter, percthres = lpjmlparams
 
     freewater = zero(T)
     soil_srunoff[cell] = zero(T)

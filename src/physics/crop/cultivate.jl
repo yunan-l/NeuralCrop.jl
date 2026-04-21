@@ -1,15 +1,14 @@
 # ifelse is more friendly to GPU parallel computing than idx and @kernel
 function cultivate!(crop::Crop,
                     crop_cal::Calendar,
-                    crop_sdate::AbstractArray{S},
-                    param::LPJmLParam,
                     ml::Managed_land,
                     soil::Soil,
                     day::Int,
-                    device
-)  where {S <: Integer}
+                    device;
+                    lpjmlparams::LPJmLParams = lpjmlparams
+)
 
-    @unpack manure_cn, nfert_split_frac, nmanure_nh4_frac= param
+    @unpack manure_cn, nfert_split_frac, nmanure_nh4_frac= lpjmlparams
 
     Zygote.ignore() do
         # if day > 1 && day % 365 == 1
@@ -21,7 +20,7 @@ function cultivate!(crop::Crop,
         crop_cal.scallback .= ifelse.(crop_cal.sdate .== day, 1, crop_cal.scallback)
         crop.isgrowing .= ifelse.(crop_cal.sdate .== day, 1, crop.isgrowing)
         crop_cal.scallback .= ifelse.(crop_cal.sdate .!= day, 0, crop_cal.scallback)
-        fertilizer!(param, crop_cal, ml, crop, soil, day)
+        fertilizer!(crop_cal, ml, crop, soil, day)
     end
 
     crop.lai = crop.lai .* (1 .- crop_cal.scallback) .+ 0.000415f0 .* crop_cal.scallback

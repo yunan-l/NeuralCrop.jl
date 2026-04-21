@@ -1,15 +1,14 @@
 function crop_nitrogen!(crop::Crop,
                         PFT::PftParameters,
                         soil::Soil,
-                        param::LPJmLParam,
                         photos_vmax::AbstractArray{T},
                         pet_daylength::AbstractArray{T},
                         temp::AbstractArray{T}
 ) where {T <: AbstractFloat}
 
 
-    ndemand_crop!(crop, PFT, param, photos_vmax, pet_daylength, temp)
-    nuptake_crop!(crop, PFT, param, soil)
+    ndemand_crop!(crop, PFT, photos_vmax, pet_daylength, temp)
+    nuptake_crop!(crop, PFT, soil)
 
     backend = KernelAbstractions.get_backend(crop.nitrogen)
 
@@ -104,15 +103,15 @@ end
 function crop_nitrogen_old!(crop::Crop,
                             PFT::PftParameters,
                             soil::Soil,
-                            param::LPJmLParam,
+                            param::LPJmLParams,
                             photos_vmax::AbstractArray{T},
                             pet_daylength::AbstractArray{T},
                             temp::AbstractArray{T}
 ) where {T <: AbstractFloat}
 
 
-    ndemand_crop!(crop, PFT, param, photos_vmax, pet_daylength, temp)
-    nuptake_crop!(crop, PFT, param, soil)
+    ndemand_crop!(crop, PFT, photos_vmax, pet_daylength, temp)
+    nuptake_crop!(crop, PFT, soil)
 
     backend = KernelAbstractions.get_backend(crop.nitrogen)
 
@@ -137,16 +136,16 @@ end
 
 
 @kernel function crop_nitrogen_old_kernel!(PFT::PftParameters,
-                                       crop_isgrowing::AbstractArray{S},
-                                       crop_nitrogen::AbstractArray{T},
-                                       crop_leafc::AbstractArray{T},
-                                       crop_rootc::AbstractArray{T},
-                                       crop_stoc::AbstractArray{T},
-                                       crop_poolc::AbstractArray{T},
-                                       crop_leafn::AbstractArray{T},
-                                       crop_rootn::AbstractArray{T},
-                                       crop_ston::AbstractArray{T},
-                                       crop_pooln::AbstractArray{T}
+                                           crop_isgrowing::AbstractArray{S},
+                                           crop_nitrogen::AbstractArray{T},
+                                           crop_leafc::AbstractArray{T},
+                                           crop_rootc::AbstractArray{T},
+                                           crop_stoc::AbstractArray{T},
+                                           crop_poolc::AbstractArray{T},
+                                           crop_leafn::AbstractArray{T},
+                                           crop_rootn::AbstractArray{T},
+                                           crop_ston::AbstractArray{T},
+                                           crop_pooln::AbstractArray{T}
 ) where {T <: AbstractFloat, S <: Integer}
 
      cell = @index(Global)
