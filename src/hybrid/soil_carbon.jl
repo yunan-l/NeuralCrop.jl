@@ -20,5 +20,4 @@ function soil_carbon!(nn_model,
     soil.fastc, soil.decom_fastc = hybrid_soilc(nn_model.soil, soil.fastc, ps.ps_soild, st.st_soild, input, soil.respose_fastc, soil.c_shift_fast, sum(soil.decom_litc, dims = 1))
     soil.slowc, soil.decom_slowc = hybrid_soilc(nn_model.soil, soil.slowc, ps.ps_soild, st.st_soild, input, soil.respose_slowc, soil.c_shift_slow, sum(soil.decom_litc, dims = 1))
     soil.rh = vec(sum(soil.decom_litc, dims = 1) * atmfrac .+ sum(soil.decom_fastc, dims = 1) .+ sum(soil.decom_slowc, dims = 1))
-    
 end

@@ -24,7 +24,6 @@ function hybrid_photos_C3!(nn_model,
     # photos.adt = photos.adt .* crop.isgrowing
     # photos.adtmm = photos.adtmm .* crop.isgrowing
     # photos.rd = photos.rd .* crop.isgrowing
-
 end
 
 
@@ -54,5 +53,4 @@ function hybrid_photos_C4!(nn_model,
     # photos.adt = photos.adt .* crop.isgrowing
     # photos.adtmm = photos.adtmm .* crop.isgrowing
     # photos.rd = photos.rd .* crop.isgrowing
-
 end

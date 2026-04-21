@@ -28,7 +28,6 @@ function crop_carbon_node!(nn_model,
     crop.leafc = crop.vegc[2, :] .* crop.isgrowing
     crop.stoc = crop.vegc[3, :] .* crop.isgrowing
     crop.poolc = crop.vegc[4, :] .* crop.isgrowing
-
 end
 
 
@@ -222,7 +221,6 @@ end
         crop_vscal_sum[cell] = zero(T)
         crop_ndf[cell] = zero(T)
     end
-
 end
 
 
@@ -242,7 +240,6 @@ function carbon_allocation_pool!(crop::Crop)
            ndrange=length(crop.stoc))
     
     KernelAbstractions.synchronize(backend)
-
 end
 
 @kernel function carbon_allocation_pool_kernel!(crop_isgrowing::AbstractArray{S},
@@ -275,5 +272,4 @@ end
         crop_poolc[cell] = zero(T)
         crop_biomass[cell] = zero(T)
     end
-
 end
