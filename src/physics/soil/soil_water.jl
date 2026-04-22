@@ -1,6 +1,7 @@
 function soil_water!(soil::Soil,
                      crop::Crop,
-                     prec::AbstractArray{T}
+                     prec::AbstractArray{T};
+                     irrigation = false
 ) where {T <: AbstractFloat}
 
     Zygote.ignore() do
@@ -9,6 +10,10 @@ function soil_water!(soil::Soil,
     end
 
     # compute soil water content
-    soil.swc = soil.swc + soil.perc - crop.trans_layer - soil.evap
-
+    if irrigation
+        # soil moisture is set to field capacity every day, without constraints on water availability
+        soil.swc = soil.wfc .* soil.layer_depth 
+    else
+        soil.swc = soil.swc + soil.perc - crop.trans_layer - soil.evap
+    end
 end

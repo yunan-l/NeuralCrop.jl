@@ -24,15 +24,15 @@ function pedotransfer!(soil::Soil;
     soil.wsats .= soil.wsat .* soil.layer_depth
 
     # here, we ignore the effects of tillage to soil water content at saturation.
-    # if(l<NTILLLAYER)
+    # if(l < NTILLLAYER)
     # {
     #     soil->wsat[l] = 1 - (1-w_sat)*soil->df_tillage[l];
     #     soil->wfc[l] = w_fc - 0.2 * (w_sat - soil->wsat[l]);
     # }
     # else
     # {
-    #     soil->wsat[l]=w_sat;
-    #     soil->wfc[l]=w_fc;
+    #     soil->wsat[l] = w_sat;
+    #     soil->wfc[l] = w_fc;
     # }  
 
     # idx = (soil.wsat - soil.wfc) .< 0.05
