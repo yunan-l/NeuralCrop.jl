@@ -96,7 +96,6 @@ end
           crop_rootn[cell] = zero(T)
           crop_ston[cell] = zero(T)
           crop_pooln[cell] = zero(T)
-
      end
 end
 
