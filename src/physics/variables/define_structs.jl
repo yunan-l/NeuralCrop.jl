@@ -8,7 +8,7 @@ mutable struct Photos{T <: AbstractArray{ <: AbstractFloat}}
     tstress::T
 end
 
-mutable struct DailyWeather{T <: AbstractArray{ <: AbstractFloat}, F <: AbstractFloat} 
+mutable struct DailyWeather{T <: AbstractArray{ <: AbstractFloat}} 
     temp::T
     prec::T
     swr::T
@@ -17,7 +17,7 @@ mutable struct DailyWeather{T <: AbstractArray{ <: AbstractFloat}, F <: Abstract
     swr_n::T
     lwr_n::T
     daily_co2::T
-    annual_co2::F 
+    annual_co2::T 
 end
     
 mutable struct PetPar{T <: AbstractArray{ <: AbstractFloat}} 

@@ -34,7 +34,7 @@ function init_structs!(PFT::PftParameters,
     c_shift_slow = lpjml.c_shift_slow
     u0 = lpjml.u0
     
-    dailyWeather, co2 = init_weather(cell_size, device)
+    dailyWeather = init_weather(cell_size, device)
 
     climbuf = init_climbuf(cell_size, device)
     crop, crop_cal, managed_land, photos = init_crop(cell_size, device)

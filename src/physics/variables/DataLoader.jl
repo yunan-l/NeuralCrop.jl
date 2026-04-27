@@ -5,7 +5,7 @@ function InitilDataLoader(data::NamedTuple,
 )
 
 
-    @unpack latitude, crop, soilparams, lpjml = data
+    @unpack latitude, crop, soilparam, lpjml = data
     
     latitude_set = latitude[data_index] |> device
     
@@ -18,14 +18,14 @@ function InitilDataLoader(data::NamedTuple,
     ) |> device
 
     soilparams = (
-        ph = soilparams.soilph[data_index],
-        w_sat = soilparams.w_sat[:, data_index],
-        sand = reshape(soilparams.sand[data_index], (1, :)),
-        clay = reshape(soilparams.clay[data_index], (1, :)),
-        # silt = soilparams.silt[data_index],
-        tdiff_0 = soilparams.tdiff_0[data_index],
-        tdiff_15 = soilparams.tdiff_15[data_index],
-        soildepth = soilparams.soildepth,
+        ph = soilparam.soilph[data_index],
+        w_sat = soilparam.w_sat[:, data_index],
+        sand = reshape(soilparam.sand[data_index], (1, :)),
+        clay = reshape(soilparam.clay[data_index], (1, :)),
+        # silt = soilparam.silt[data_index],
+        tdiff_0 = soilparam.tdiff_0[data_index],
+        tdiff_15 = soilparam.tdiff_15[data_index],
+        soildepth = soilparam.soildepth,
     ) |> device
       
     u0_set = (

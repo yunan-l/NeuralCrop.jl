@@ -1,7 +1,6 @@
 function evaporation!(pet_eeq::AbstractArray{T},
                       crop::Crop,
-                      soil::Soil;
-                      lpjmlparams::LPJmLParams = lpjmlparams
+                      soil::Soil
     
 ) where {T <: AbstractFloat}
 
@@ -10,7 +9,6 @@ function evaporation!(pet_eeq::AbstractArray{T},
     kernel = evaporation_kernel!(backend)
     
     kernel(pet_eeq, 
-           lpjmlparams, 
            crop.fpar, 
            crop.trans_layer,
            crop.canopy_wet, 
@@ -27,7 +25,6 @@ function evaporation!(pet_eeq::AbstractArray{T},
 end
 
 @kernel function evaporation_kernel!(pet_eeq::AbstractArray{T},
-                                     lpjmlparams::LPJmLParams,
                                      crop_fpar::AbstractArray{T},
                                      crop_trans_layer::AbstractArray{M},
                                      crop_canopy_wet::AbstractArray{T},
@@ -37,14 +34,15 @@ end
                                      soil_evap::AbstractArray{M},
                                      soil_agtop_cover::AbstractArray{T},
                                      soil_layer_depth::AbstractArray{T};
-                                     soil_layers = 5
+                                     soil_layers = 5,
+                                     lpjmlparams::LPJmLParams = lpjmlparams
 ) where {T <: AbstractFloat, M <: AbstractFloat}
     
     cell = @index(Global)
 
-    @unpack PRIESTLEY_TAYLOR = param  # Priestley-Taylor coefficient
+    @unpack PRIESTLEY_TAYLOR = lpjmlparams  # Priestley-Taylor coefficient
     
-    soildepth_evap = param.soildepth_evap
+    soildepth_evap = lpjmlparams.soildepth_evap
 
     evap_energy = pet_eeq[cell] * PRIESTLEY_TAYLOR * max(1 - crop_fpar[cell], 0.05)
     # evap_litter = pet_eeq[cell] * PRIESTLEY_TAYLOR * (1 - crop_canopy_wet[cell]) - sum(crop_trans_layer[:, cell])
@@ -77,7 +75,7 @@ end
         end
     end
 
-    soildepth_evap = param.soildepth_evap
+    soildepth_evap = lpjmlparams.soildepth_evap
     for l in 1:soil_layers
         if soildepth_evap > 0
             fraction = min(1, soildepth_evap / soil_layer_depth[l])

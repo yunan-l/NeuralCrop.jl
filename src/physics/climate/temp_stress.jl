@@ -9,7 +9,7 @@ function temp_stress(PFT::PftParameters,
     
     kernel = temp_stress_kernel!(backend)
     
-    kernel(pet.daylength, temp, photos.tstress, photoparams, PFT, ndrange=length(photos.tstress))
+    kernel(pet.daylength, temp, photos.tstress, PFT, ndrange=length(photos.tstress))
     
     KernelAbstractions.synchronize(backend)
   

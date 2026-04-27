@@ -30,6 +30,12 @@ function update_climbuf!(PFT::PftParameters,
         annual_climbuf!(climbuf.atemp, climbuf, PFT, device)
     end
     
-    climbuf.atemp[day % 365, :] .= temp
+    if day % 365 == 0
+        day = 365
+    else
+        day = day % 365
+    end
+    
+    climbuf.atemp[day, :] .= temp
 
 end

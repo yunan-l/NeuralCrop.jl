@@ -1,4 +1,4 @@
-struct MLP{M <: Lux.AbstractLuxLayer, K} <:Lux.AbstractLuxContainerLayer{(:model,)}
+struct MLP{M <: Lux.AbstractLuxLayer, K} <:Lux.Lux.AbstractLuxWrapperLayer{:model}
     model::M 
     kwargs::K
 end
@@ -7,7 +7,7 @@ function MLP(model::Lux.AbstractLuxLayer;  kwargs...)
     return MLP{typeof(model), typeof(kwargs)}(model, kwargs)
 end
 
-struct NODE{M <: Lux.AbstractLuxLayer, So, T, K} <:Lux.AbstractLuxContainerLayer{(:model,)}
+struct NODE{M <: Lux.AbstractLuxLayer, So, T, K} <:Lux.Lux.AbstractLuxWrapperLayer{:model}
     model::M
     solver::So
     tspan::T
