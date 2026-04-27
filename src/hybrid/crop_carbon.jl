@@ -46,7 +46,7 @@ function crop_carbon_hybrid!(nn_model,
 
     # compute crop respiration
     Zygote.ignore() do
-        respiration!(crop, PFT, lpjmlparams, temp, photos.agd - photos.rd)
+        respiration!(crop, PFT, temp, photos.agd - photos.rd)
     end
 
     # compute crop root and leaf carbon allocation
