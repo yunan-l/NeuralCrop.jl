@@ -39,10 +39,10 @@ Then, in the Julia REPL, activate the project and instantiate it to replicate ou
 
 ```julia
 pkg> activate(".")
-pkg> instantiate()
+pkg> instantiate
 ```
 
-This approach ensures you use the exact versions of all dependencies as specified in `Manifest.toml`, avoiding potential package version conflicts.
+<!-- This approach ensures you use the exact versions of all dependencies as specified in `Manifest.toml`, avoiding potential package version conflicts. -->
 
 We recommend running NeuralCrop on Julia version 1.10.x.
 
