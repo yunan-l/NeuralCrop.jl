@@ -17,5 +17,4 @@ function soil_nitrogen!(nn_model,
     input = vcat(mean(soil.swc./soil.layer_depth, dims = 1), reshape(temp_n, (1, :)), reshape(sw_n, (1, :)))
     soil.fastn, soil.decom_fastn = hybrid_soiln(nn_model.soil, soil.fastn, ps.soild, st.soild, input, soil.respose_fastn, soil.n_shift_fast, sum(soil.decom_litn, dims = 1))
     soil.slown, soil.decom_slown = hybrid_soiln(nn_model.soil, soil.slown, ps.soild, st.soild, input, soil.respose_slown, soil.n_shift_slow, sum(soil.decom_litn, dims = 1))
-
 end
