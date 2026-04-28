@@ -74,7 +74,6 @@ function daily_crop_C3!(start_day,
         # # output
         # # output_predict!(output, photos, crop, soil, day_)
         # # output_yield!(output, crop, day_of_year)   
-
     end
 end
 
@@ -152,6 +151,5 @@ function daily_crop_C3!(start_day,
         # # output
         # # output_predict!(output, photos, crop, soil, day_)
         # # output_yield!(output, crop, day_of_year)   
-
     end
 end
