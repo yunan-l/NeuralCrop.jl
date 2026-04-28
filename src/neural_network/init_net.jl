@@ -101,7 +101,6 @@ end
 #     return mlp, ps, st
 # end
 
-
 # function epd_mlp(input_dim, neurons, output_dim, activation, layers, blocks, net_struct, rng, constrain_f)
     
 #     # Step 1: Encode
