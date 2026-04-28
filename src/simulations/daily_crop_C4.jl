@@ -78,7 +78,6 @@ function daily_crop_C4!(day_start,
 
         # # output
         # output_yield!(output, crop, day_of_year)
-
     end
 end
 
@@ -161,6 +160,5 @@ function daily_crop_C4!(day_start,
 
         # # output
         # output_yield!(output, crop, day_of_year)
-
     end
 end
