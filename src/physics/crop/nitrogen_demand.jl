@@ -2,16 +2,14 @@ function ndemand_crop!(crop::Crop,
                        PFT::PftParameters,
                        photos_vmax::AbstractArray{T},
                        pet_daylength::AbstractArray{T},
-                       temp::AbstractArray{T};
-                       lpjmlparams::LPJmLParams = lpjmlparams
+                       temp::AbstractArray{T}
 ) where {T <: AbstractFloat}
 
     backend = KernelAbstractions.get_backend(crop.ndemand_tot)
 
     kernel = ndemand_crop_kernel!(backend)
     
-    kernel(PFT, 
-           lpjmlparams, 
+    kernel(PFT,
            crop.lai, 
            crop.leafc, 
            crop.rootc, 
@@ -30,7 +28,6 @@ function ndemand_crop!(crop::Crop,
 end
 
 @kernel function ndemand_crop_kernel!(PFT::PftParameters,
-                                      lpjmlparams::LPJmLParams,
                                       crop_lai::AbstractArray{T},
                                       crop_leafc::AbstractArray{T},
                                       crop_rootc::AbstractArray{T},
@@ -42,6 +39,7 @@ end
                                       pet_daylength::AbstractArray{T},
                                       photos_vmax::AbstractArray{T},
                                       temp::AbstractArray{T};
+                                      lpjmlparams::LPJmLParams = lpjmlparams,
                                       k_l = 0.08f0 # Priestley-Taylor coefficient
 ) where {T <: AbstractFloat, S <: Integer}
     

@@ -2,16 +2,14 @@ function fertilizer!(crop_cal::Calendar,
                      ml::Managed_land,
                      crop::Crop,
                      soil::Soil,
-                     day;
-                     lpjmlparams::LPJmLParams = lpjmlparams,
+                     day
 )
 
     backend = KernelAbstractions.get_backend(crop.nfertilizer)
 
     kernel = fertilizer_kernel!(backend)
     
-    kernel(lpjmlparams,
-           crop_cal.sdate,
+    kernel(crop_cal.sdate,
            ml.manure,
            ml.fertilizer,
            crop.nmanure,
@@ -27,8 +25,7 @@ function fertilizer!(crop_cal::Calendar,
 end
 
 
-@kernel function fertilizer_kernel!(lpjmlparams::LPJmLParams,
-                                    crop_cal_sdate::AbstractArray{S},
+@kernel function fertilizer_kernel!(crop_cal_sdate::AbstractArray{S},
                                     ml_manure::AbstractArray{T},
                                     ml_fertilizer::AbstractArray{T},
                                     crop_nmanure::AbstractArray{T},
@@ -37,6 +34,7 @@ end
                                     soil_NO3::AbstractArray{M},
                                     soil_NH4::AbstractArray{M},
                                     day::Integer;
+                                    lpjmlparams::LPJmLParams = lpjmlparams,
                                     nitrogen_is_unlimited = true
 ) where {T <: AbstractFloat, M <: AbstractFloat, S <: Integer}
     

@@ -1,7 +1,6 @@
 function nuptake_crop!(crop::Crop,
                        PFT::PftParameters,
-                       soil::Soil;
-                       lpjmlparams::LPJmLParams = lpjmlparams
+                       soil::Soil
 )
 
     backend = KernelAbstractions.get_backend(crop.nitrogen)
@@ -9,7 +8,6 @@ function nuptake_crop!(crop::Crop,
     kernel = nuptake_crop_kernel!(backend)
     
     kernel(PFT,
-           lpjmlparams,
            crop.leafn,
            crop.leafc,
            crop.rootn,
@@ -33,7 +31,6 @@ function nuptake_crop!(crop::Crop,
 end
 
 @kernel function nuptake_crop_kernel!(PFT::PftParameters,
-                                      lpjmlparams::LPJmLParams,
                                       crop_leafn::AbstractArray{T},
                                       crop_leafc::AbstractArray{T},
                                       crop_rootn::AbstractArray{T},
@@ -50,6 +47,7 @@ end
                                       soil_NH4::AbstractArray{M},
                                       soil_layer_depth::AbstractArray{T},
                                       soil_temp::AbstractArray{M};
+                                      lpjmlparams::LPJmLParams = lpjmlparams,
                                       soil_layers = 5, # Priestley-Taylor coefficient
                                       AUTO_FERTILIZER = true
 ) where {T <: AbstractFloat, M <: AbstractFloat, S <: Integer}

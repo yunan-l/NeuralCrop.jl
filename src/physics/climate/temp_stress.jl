@@ -1,8 +1,7 @@
 function temp_stress(PFT::PftParameters,
                      pet::PetPar,
                      photos::Photos,
-                     temp::AbstractArray{T};
-                     photoparams::PhotoParams = photoparams,
+                     temp::AbstractArray{T}
 ) where {T <: AbstractFloat}
 
     backend = KernelAbstractions.get_backend(temp)

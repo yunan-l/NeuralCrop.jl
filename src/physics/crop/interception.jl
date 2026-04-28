@@ -1,28 +1,27 @@
 function interception!(crop::Crop,
                        PFT::PftParameters,
                        pet_eeq::AbstractArray{T},
-                       rain::AbstractArray{T};
-                       lpjmlparams::LPJmLParams = lpjmlparams,
+                       rain::AbstractArray{T}
 ) where {T <: AbstractFloat}
 
     backend = KernelAbstractions.get_backend(crop.intercep)
 
     kernel = interception_kernel!(backend)
     
-    kernel(lpjmlparams, PFT, crop.canopy_wet, crop.lai, crop.intercep, crop.isgrowing, pet_eeq, rain, ndrange=length(crop.intercep))
+    kernel(PFT, crop.canopy_wet, crop.lai, crop.intercep, crop.isgrowing, pet_eeq, rain, ndrange=length(crop.intercep))
     
     KernelAbstractions.synchronize(backend)
   
 end
 
-@kernel function interception_kernel!(lpjmlparams::LPJmLParams,
-                                      PFT::PftParameters,
+@kernel function interception_kernel!(PFT::PftParameters,
                                       crop_canopy_wet::AbstractArray{T},
                                       crop_lai::AbstractArray{T},
                                       crop_intercep::AbstractArray{T},
                                       crop_isgrowing::AbstractArray{S},
                                       pet_eeq::AbstractArray{T},
-                                      rain::AbstractArray{T}
+                                      rain::AbstractArray{T};
+                                      lpjmlparams::LPJmLParams = lpjmlparams
 ) where {T <: AbstractFloat, S <: Integer}
     
     cell = @index(Global)

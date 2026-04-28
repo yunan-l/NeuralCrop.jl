@@ -1,13 +1,11 @@
 function snow!(soil::Soil,
-               dailyWeather::DailyWeather;
-               snowparams::SnowParams = snowparams,
-               lpjmlparams::LPJmLParams = lpjmlparams,
+               dailyWeather::DailyWeather
 )
     backend = KernelAbstractions.get_backend(dailyWeather.temp)
     
     kernel = snow_kernel!(backend)
     
-    kernel(snowparams, lpjmlparams, dailyWeather.temp, dailyWeather.prec, soil.snowpack, soil.snowheight, soil.snowfraction, ndrange=length(dailyWeather.temp))
+    kernel(dailyWeather.temp, dailyWeather.prec, soil.snowpack, soil.snowheight, soil.snowfraction, ndrange=length(dailyWeather.temp))
     
     KernelAbstractions.synchronize(backend)
 
@@ -15,13 +13,13 @@ end
 
 
 
-@kernel function snow_kernel!(snowparams::SnowParams,
-                              lpjmlparams::LPJmLParams,
-                              temp::AbstractArray{T},
+@kernel function snow_kernel!(temp::AbstractArray{T},
                               prec::AbstractArray{T},
                               soil_snowpack::AbstractArray{T},
                               soil_snowheight::AbstractArray{T},
-                              soil_snowfraction::AbstractArray{T},
+                              soil_snowfraction::AbstractArray{T};
+                              snowparams::SnowParams = snowparams,
+                              lpjmlparams::LPJmLParams = lpjmlparams,
 ) where {T <: AbstractFloat}
     
     cell = @index(Global)
@@ -45,7 +43,6 @@ end
         # evap[cell] += T(0.1)
     # else
         # evap[cell] = T(0.1)
-    
     end
 
     # snow layer is insulating
