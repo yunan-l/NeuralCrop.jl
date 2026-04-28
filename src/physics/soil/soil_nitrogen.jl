@@ -2,7 +2,6 @@ function soil_nitrogen!(crop_cal::Calendar,
                         soil::Soil
 )
 
-
     # compute soil carbon: litter carbon and soil carbon
     soil.decom_litn = (1.0f0 .- exp.(-soil.respose_litn / 100)) .* soil.litn
     soil.litn = soil.litn  - soil.decom_litn
