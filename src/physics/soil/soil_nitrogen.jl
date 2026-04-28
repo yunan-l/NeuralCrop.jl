@@ -21,5 +21,4 @@ function soil_nitrogen!(crop_cal::Calendar,
  
     soil.decom_slown = (1.0f0 .- exp.(-soil.respose_slown .* response / 10)) .* soil.slown
     soil.slown = soil.slown + soil.n_shift_slow .* sum(soil.decom_litn, dims = 1) - soil.decom_slown
-    
 end
