@@ -110,7 +110,6 @@ function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, 
     end
 
     return nn_model, best_ps, st, results
-    
 end
 
 # space validation
@@ -225,7 +224,6 @@ function train_loop_winter_wheat_rollout!(daily_crop, rollout, nn_model, ps, st,
     end
 
     return nn_model, best_ps, st, results
-    
 end
 
 
@@ -340,7 +338,6 @@ function train_loop_rollout!(daily_crop, rollout, nn_model, ps, st, parameters, 
     end
 
     return nn_model, best_ps, st, results
-    
 end
 
 
@@ -457,5 +454,4 @@ function train_loop_winter_wheat_rollout!(daily_crop, rollout, nn_model, ps, st,
     end
 
     return nn_model, best_ps, st, results
-    
 end
