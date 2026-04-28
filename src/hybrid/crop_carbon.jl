@@ -40,8 +40,7 @@ function crop_carbon_hybrid!(nn_model,
                              PFT::PftParameters,
                              temp::AbstractArray{T},
                              temp_n::AbstractArray{T},
-                             soil_swc::AbstractArray{M};
-                             lpjmlparams::LPJmLParams = lpjmlparams
+                             soil_swc::AbstractArray{M}
 ) where {T <: AbstractFloat, M <: AbstractFloat}
 
     # compute crop respiration
