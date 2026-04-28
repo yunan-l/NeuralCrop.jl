@@ -7,6 +7,7 @@ function neural_lambda(n::MLP, ps, st, input)
     
 end
 
+
 # vmax
 function neural_vmax(n::MLP, ps, st, input)
     
@@ -15,6 +16,7 @@ function neural_vmax(n::MLP, ps, st, input)
     return vec(st_model(input, ps))
     
 end
+
 
 # storage carbon
 function neural_stoc(n::NODE, u0, ps, st, input; dt = 1.0f0)
@@ -28,6 +30,15 @@ function neural_stoc(n::NODE, u0, ps, st, input; dt = 1.0f0)
     return vec(solve(prob, n.solver; dt = dt))
 end
 
+function neural_stoc(n::MLP, ps, st, input)
+    
+    st_model = Lux.StatefulLuxLayer{true}(n.model, ps, st)
+        
+    return vec(st_model(input, ps))
+    
+end
+
+
 # vegetation carbon pools
 function neural_allocation(n::NODE, u0, ps, st, input; dt = 1.0f0)
     
@@ -39,6 +50,7 @@ function neural_allocation(n::NODE, u0, ps, st, input; dt = 1.0f0)
     
     return solve(prob, n.solver; dt = dt)
 end
+
 
 # litter carbon pools
 function hybrid_litc(n::NODE, u0, ps, st, input, response; dt = 1.0f0)
@@ -52,6 +64,7 @@ function hybrid_litc(n::NODE, u0, ps, st, input, response; dt = 1.0f0)
     return solve(prob, n.solver; dt = dt)
 end
 
+
 # litter nitrogen pools
 function hybrid_litn(n::NODE, u0, ps, st, input, response; dt = 1.0f0)
     
@@ -64,6 +77,7 @@ function hybrid_litn(n::NODE, u0, ps, st, input, response; dt = 1.0f0)
     return solve(prob, n.solver; dt = dt)
 end
 
+
 # soil carbon pools
 function hybrid_soilc(n::NODE, u0, ps, st, input, response, A_trans, c_input; dt = 1.0f0)
 
@@ -75,6 +89,7 @@ function hybrid_soilc(n::NODE, u0, ps, st, input, response, A_trans, c_input; dt
     
     return solve(prob, n.solver; A_trans = A_trans, c_input = c_input, dt = dt)
 end
+
 
 # soil nitrogen pools
 function hybrid_soiln(n::NODE, u0, ps, st, input, response, A_trans, c_input; dt = 1.0f0)
