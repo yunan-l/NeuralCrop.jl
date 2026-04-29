@@ -183,8 +183,7 @@ mutable struct DataNorm{T <: AbstractArray{ <: AbstractFloat}, M <: AbstractArra
 end
 
 
-mutable struct Output{T <: AbstractArray{ <: AbstractFloat}, M <: AbstractArray{<: AbstractFloat}} 
-    growing_mask::T
+mutable struct Output{T <: AbstractArray{ <: AbstractFloat}, S <: AbstractArray{ <: Integer}, M <: AbstractArray{<: AbstractFloat}} 
     gpp::T
     lambda::T
     vmax::T
@@ -208,7 +207,8 @@ mutable struct Output{T <: AbstractArray{ <: AbstractFloat}, M <: AbstractArray{
     et::T
     prec::T
     temp::T
-    harvesting_mask::T
-    harvesting_year::T
     fphu::T
+    growing_mask::S
+    harvesting_mask::S
+    harvesting_year::S
 end
