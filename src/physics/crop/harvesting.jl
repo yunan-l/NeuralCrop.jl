@@ -31,8 +31,9 @@ function harvest_crop!(crop_cal::Calendar,
     if day == 365
         Zygote.ignore() do
             crop_cal.harvesting_year .= ifelse.(crop.yield .!= 0.0f0, 1, 0)
+            output.yield = vcat(output.yield, reshape(max.(crop.yield, 0.0f0), (1, :)))
+            crop.yield .= 0.0f0
         end
-        output.yield = vcat(output.yield, reshape(max.(crop.yield, 0.0f0), (1, :)))
         output.harvesting_year = vcat(output.harvesting_year, reshape(crop_cal.harvesting_year, (1, :)))
     end
     crop.vegc = crop.vegc .* (1 .- reshape(crop_cal.hcallback, (1, :)))
