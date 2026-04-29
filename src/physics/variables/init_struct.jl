@@ -61,7 +61,8 @@ function init_crop(cell_size::Int,
         device(zeros(Int32, cell_size)),  # sdate
         device(zeros(Int32, cell_size)),  # hdate
         device(zeros(Int32, cell_size)),  # sowing day callback
-        device(zeros(Int32, cell_size))   # harvesting day callback
+        device(zeros(Int32, cell_size)),   # harvesting day callback
+        device(zeros(Float32, cell_size))  # harvesting_year
     )
 
     managed_land = Managed_land(
@@ -272,6 +273,7 @@ function init_output(cell_size::Int,
         device(zeros(Float32, (1, cell_size))),              # prec
         device(zeros(Float32, (1, cell_size))),              # temp
         device(zeros(Float32, (1, cell_size))),              # harvesting mask
+        device(zeros(Float32, (1, cell_size))),              # harvesting year
         device(zeros(Float32, (1, cell_size)))               # fphu
     )
 

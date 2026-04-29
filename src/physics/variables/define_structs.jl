@@ -97,6 +97,7 @@ mutable struct Calendar{S <: AbstractArray{ <: Integer}}
     hdate::S
     scallback::S
     hcallback::S
+    harvesting_year::S
 end
 
 mutable struct Managed_land{T <: AbstractArray{ <: AbstractFloat}} 
@@ -208,5 +209,6 @@ mutable struct Output{T <: AbstractArray{ <: AbstractFloat}, M <: AbstractArray{
     prec::T
     temp::T
     harvesting_mask::T
+    harvesting_year::T
     fphu::T
 end
