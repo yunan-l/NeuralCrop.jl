@@ -32,7 +32,7 @@ NeuralCrop is a differentiable hybrid global gridded crop model (GGCM) that comb
 
 ## Installation
 
-NeuralCrop is still under development to make it more user-friendly and not yet registered as a Julia package. To use it, you can still install the package from the repository via the package manager (type `]` in your REPL):
+NeuralCrop is not yet registered as a Julia package. To use it, you can still install the package from the repository via the package manager (type `]` in your REPL):
 ```
 pkg> add https://github.com/yunan-l/NeuralCrop.jl.git
 ```
