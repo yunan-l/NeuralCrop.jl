@@ -25,6 +25,10 @@ NeuralCrop.jl
 
 NeuralCrop is a differentiable hybrid global gridded crop model (GGCM) that combines the strengths of the state-of-the-art GGCM [LPJmL](https://gmd.copernicus.org/articles/11/2789/2018/) with machine learning approaches. By implementing process-based components in a differentiable form for seamless integration with machine learning methods, NeuralCrop enables end-to-end 'online training', with machine learning components optimized in tandem with the physical model dynamics. NeuralCrop is a flexible Julia framework supporting both purely process-based and hybrid simulations across CPUs and GPUs. More details are available in our preprint paper: [https://arxiv.org/abs/2512.20177](https://arxiv.org/abs/2512.20177)
 
+> [!NOTE]
+>
+> NeuralCrop is under further development! At this stage, NeuralCrop is unable to perform spin-up simulations to establish equilibrium soil states. The initial conditions for soil carbon, nitrogen, and water are currently derived from LPJmL.
+
 
 ## Installation
 
@@ -77,7 +81,7 @@ We compare the inference time between GPU-accelerated NeuralCrop and CPU-based L
 NeuralCrop.jl is a research project developed with the support by the [Earth System Modeling group](https://www.asg.ed.tum.de/esm/home/) at the Technical University of Munich (TUM) and [FutureLab on Artificial Intelligence](https://www.pik-potsdam.de/en/institute/departments/complexity-science/research/artificial-intelligence) at the Potsdam Institute for Climate Impact Research (PIK). The author acknowledges funding from the program of the China Scholarship Council (grant agreement no.202303250017) and the Horizon Europe ClimTip project (grant agreement no.101137601).
 
 
-## Citing
+## Citation
 
 If you use NeuralCrop.jl in research or other non-commercial activities 🏄, please mention NeuralCrop.jl and cite our paper:
 
