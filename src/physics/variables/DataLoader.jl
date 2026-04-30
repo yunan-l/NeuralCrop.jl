@@ -1,7 +1,8 @@
 function InitilDataLoader(data::NamedTuple, 
                           data_index::Vector{Int},
                           device;
-                          training = false
+                          training = false,
+                          training_by_yield = false
 )
 
 
@@ -40,7 +41,20 @@ function InitilDataLoader(data::NamedTuple,
         soil_NO3 = lpjml.u0.soil_NO3[:, data_index],
     ) |> device
     
-    if training
+    if training && training_by_yield
+        lpjml = (
+            crop = crop,
+            c_shift_fast = lpjml.c_shift_fast[:, data_index],
+            c_shift_slow = lpjml.c_shift_slow[:, data_index],
+            u0 = u0_set,
+            output = lpjml.output[:, data_index],   
+            output_n = lpjml.output_n[:, data_index],   
+            yield = lpjml.yield[:, data_index],   
+            μ = lpjml.μ[data_index],
+            σ = lpjml.σ[data_index],
+            gdhy_yield_n = lpjml.gdhy_yield_n[:, data_index]
+        ) |> device
+    elseif training
         lpjml = (
             crop = crop,
             c_shift_fast = lpjml.c_shift_fast[:, data_index],
