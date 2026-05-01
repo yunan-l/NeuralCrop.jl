@@ -52,7 +52,7 @@ function InitilDataLoader(data::NamedTuple,
             yield = lpjml.yield[:, data_index],   
             μ = lpjml.μ[data_index],
             σ = lpjml.σ[data_index],
-            gdhy_yield_n = lpjml.gdhy_yield_n[:, data_index]
+            gdhy_yield = lpjml.gdhy_yield[:, data_index]
         ) |> device
     elseif training
         lpjml = (
