@@ -54,7 +54,7 @@ export evaporation!, soil_water!
 export nitrogen_transform!, soil_nitrogen!, update_litc_tillage!, update_litn_tillage!
 
 # OUTPUT
-export output_training!, output_predict!, output_finetune!, output_yield!
+export output_training!, output_predict!, output_finetune!
 
 # UNITS
 export deg2rad, ppm2Pa, ppm2bar, hour2day, hour2sec, degCtoK
