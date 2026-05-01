@@ -211,4 +211,5 @@ mutable struct Output{T <: AbstractArray{ <: AbstractFloat}, S <: AbstractArray{
     growing_mask::S
     harvesting_mask::S
     harvesting_year::S
+    hdate::S
 end

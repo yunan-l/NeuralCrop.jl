@@ -274,7 +274,8 @@ function init_output(cell_size::Int,
         device(zeros(Float32, (1, cell_size))),              # fphu
         device(zeros(Int32, (1, cell_size))),                # growing_mask
         device(zeros(Int32, (1, cell_size))),                # harvesting mask
-        device(zeros(Int32, (1, cell_size)))                 # harvesting year
+        device(zeros(Int32, (1, cell_size))),                # harvesting year
+        device(zeros(Int32, (1, cell_size)))                 # hdate
     )
 
     return output
