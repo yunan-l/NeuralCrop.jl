@@ -53,8 +53,9 @@ function crop_carbon_hybrid!(nn_model,
         carbon_allocation_root_leaf!(PFT, crop, photos)
     end
 
-    input = vcat(reshape(crop.npp/20, (1, :)), reshape(crop.fphu, (1, :)), reshape(temp_n, (1, :)), mean(soil_swc[1:3, :], dims = 1)) .* reshape(crop.isgrowing, (1, :))
-    crop.stoc = neural_stoc(nn_model, reshape(crop.stoc/20, (1, :)), ps, st, input)
+    input = vcat(reshape(crop.npp/20, (1, :)), reshape(crop.fphu, (1, :)), reshape(temp_n, (1, :)), reshape(crop.wdf/100, (1, :))) .* reshape(crop.isgrowing, (1, :))
+    # crop.stoc = neural_stoc(nn_model, reshape(crop.stoc/20, (1, :)), ps, st, input)
+    crop.stoc = neural_stoc(nn_model, ps, st, input) .* crop.biomass
 
     # compute crop rest carbon allocation
     Zygote.ignore() do
