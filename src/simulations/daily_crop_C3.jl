@@ -71,9 +71,6 @@ function daily_crop_C3!(start_day,
         # soil water cycle
         soil_water!(model.swc, ps.swc, st.swc, soil, crop, dailyWeather.prec, dailyWeather.swr_n, dailyWeather.lwr_n)
 
-        # # output
-        # # output_predict!(output, photos, crop, soil, day_)
-        # # output_yield!(output, crop, day_of_year)   
     end
 end
 
@@ -148,8 +145,5 @@ function daily_crop_C3!(start_day,
         # soil water cycle
         soil_water!(soil, crop, dailyWeather.prec)
 
-        # # output
-        # # output_predict!(output, photos, crop, soil, day_)
-        # # output_yield!(output, crop, day_of_year)   
     end
 end
