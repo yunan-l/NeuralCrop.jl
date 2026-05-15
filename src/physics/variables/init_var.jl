@@ -62,8 +62,8 @@ function init_structs!(PFT::PftParameters,
     soil.swc = copy(u0.swc)
     soil.NO3 = copy(u0.soil_NO3)
     soil.NH4 = copy(u0.soil_NH4)
+    soil.wsat = copy(soilparams.w_sat)
     soil.ph = soilparams.ph
-    soil.wsat = soilparams.w_sat
     soil.sand = soilparams.sand
     soil.clay = soilparams.clay
     soil.tdiff_0 = soilparams.tdiff_0
