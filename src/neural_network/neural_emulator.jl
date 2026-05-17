@@ -23,7 +23,7 @@ function neural_stoc(n::NODE, u0, ps, st, input; dt = 1.0f0)
     
     st_model = Lux.StatefulLuxLayer{true}(n.model, ps, st)
 
-    rhs(u, p, t) = st_model(vcat(u/200, input), p)
+    rhs(u, p, t) = st_model(vcat(u/500, input), p)
     
     prob = ODEProblem{false}(ODEFunction{false}(rhs), u0, n.tspan, ps)
     
