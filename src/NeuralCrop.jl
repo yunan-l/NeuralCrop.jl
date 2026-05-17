@@ -45,7 +45,7 @@ export phenology_crop!, lai_crop!, lai_deficit!, cultivate!, harvest_crop!, fert
 export transpiration!, interception!
 export crop_nitrogen!, crop_nitrogen_old!, ndemand_crop!, nuptake_crop!
 export root_distribution, temp_stress
-export crop_carbon!, crop_carbon_node!, crop_carbon_hybrid!, hybrid_photos_C3!, hybrid_photos_C4!
+export crop_carbon!, crop_carbon_hybrid!, hybrid_photos_C3!, hybrid_photos_C4!
 
 ### SOIL
 export soiltemp_lag!
