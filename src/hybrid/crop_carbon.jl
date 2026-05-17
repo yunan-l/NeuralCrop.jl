@@ -1,37 +1,4 @@
 ### crop carbon allocation with Neural ODE
-function crop_carbon_node!(nn_model,
-                           ps,
-                           st,
-                           photos::Photos,
-                           crop::Crop,
-                           PFT::PftParameters,
-                           temp::AbstractArray{T},
-                           temp_n::AbstractArray{T},
-                           soil_swc::AbstractArray{M}
-) where {T <: AbstractFloat, M <: AbstractFloat}
-
-    # compute crop respiration
-    Zygote.ignore() do
-        respiration!(crop, PFT, temp, photos.agd - photos.rd)
-    end
-
-    # compute crop carbon allocation
-    crop.npp = (photos.agd - photos.rd - crop.resp)
-    crop.biomass = crop.biomass .+ crop.npp
-    crop.biomass = crop.biomass .* crop.isgrowing
-    
-    # input = vcat(reshape(crop.npp/20, (1, :)), reshape(crop.lai/5, (1, :)), reshape(crop.leafn/5, (1, :)), mean(soil_swc[1:3, :], dims = 1), reshape(temp_n, (1, :))) .* reshape(crop.isgrowing, (1, :))
-    input = vcat(reshape(crop.npp/20, (1, :)), reshape(crop.lai/5, (1, :)), reshape(crop.fphu, (1, :)), mean(soil_swc[1:3, :], dims = 1)) .* reshape(crop.isgrowing, (1, :))
-    crop.vegc = neural_allocation(nn_model, crop.vegc, ps, st, input)
-    
-    crop.rootc = crop.vegc[1, :] .* crop.isgrowing
-    crop.leafc = crop.vegc[2, :] .* crop.isgrowing
-    crop.stoc = crop.vegc[3, :] .* crop.isgrowing
-    crop.poolc = crop.vegc[4, :] .* crop.isgrowing
-end
-
-
-### crop carbon allocation with hybrid Neural ODE
 function crop_carbon_hybrid!(nn_model,
                              ps,
                              st,
@@ -39,32 +6,100 @@ function crop_carbon_hybrid!(nn_model,
                              crop::Crop,
                              PFT::PftParameters,
                              temp::AbstractArray{T},
-                             temp_n::AbstractArray{T},
-                             soil_swc::AbstractArray{M}
-) where {T <: AbstractFloat, M <: AbstractFloat}
+                             temp_n::AbstractArray{T};
+                             hybrid = true,
+                             NODE = false,
+                             residual = false
+) where {T <: AbstractFloat}
 
     # compute crop respiration
     Zygote.ignore() do
         respiration!(crop, PFT, temp, photos.agd - photos.rd)
     end
 
-    # compute crop root and leaf carbon allocation
-    Zygote.ignore() do
-        carbon_allocation_root_leaf!(PFT, crop, photos)
+    if hybrid 
+        # compute crop root and leaf carbon allocation
+        Zygote.ignore() do
+            carbon_allocation_root_leaf!(PFT, crop, photos)
+        end
+
+        # compute crop storage carbon allocation
+        input = vcat(reshape(crop.npp/20, (1, :)), reshape(crop.fphu, (1, :)), reshape(temp_n, (1, :)), reshape(crop.wdf/100, (1, :))) .* reshape(crop.isgrowing, (1, :))
+        if NODE
+            crop.stoc = neural_stoc(nn_model, reshape(crop.stoc, (1, :)), ps, st, input)
+        else
+            crop.stoc = neural_stoc(nn_model, ps, st, input) .* crop.biomass
+        end
+
+        # compute crop rest carbon allocation
+        Zygote.ignore() do
+            carbon_allocation_pool!(crop)
+        end
+
+        crop.vegc = vcat(reshape(crop.rootc, (1, :)), reshape(crop.leafc, (1, :)), reshape(crop.stoc, (1, :)), reshape(crop.poolc, (1, :)))
+    elseif residual
+        # compute crop root and leaf carbon allocation
+        Zygote.ignore() do
+            carbon_allocation!(PFT, crop, photos)
+        end
+
+        input = vcat(reshape(crop.npp/20, (1, :)), reshape(crop.fphu, (1, :)), reshape(temp_n, (1, :)), reshape(crop.wdf/100, (1, :))) .* reshape(crop.isgrowing, (1, :))
+        crop.stoc = crop.stoc + neural_stoc(nn_model, ps, st, input)
+
+        crop.vegc = vcat(reshape(crop.rootc, (1, :)), reshape(crop.leafc, (1, :)), reshape(crop.stoc, (1, :)), reshape(crop.poolc, (1, :)))
+    else
+        # compute crop carbon allocation
+        crop.npp = (photos.agd - photos.rd - crop.resp)
+        crop.biomass = crop.biomass .+ crop.npp
+        crop.biomass = crop.biomass .* crop.isgrowing
+        
+        input = vcat(reshape(crop.npp/20, (1, :)), reshape(crop.lai/5, (1, :)), reshape(crop.fphu, (1, :)), reshape(crop.wdf/100, (1, :))) .* reshape(crop.isgrowing, (1, :))
+        crop.vegc = neural_allocation(nn_model, crop.vegc, ps, st, input)
+        
+        crop.rootc = crop.vegc[1, :] .* crop.isgrowing
+        crop.leafc = crop.vegc[2, :] .* crop.isgrowing
+        crop.stoc = crop.vegc[3, :] .* crop.isgrowing
+        crop.poolc = crop.vegc[4, :] .* crop.isgrowing
     end
-
-    input = vcat(reshape(crop.npp/20, (1, :)), reshape(crop.fphu, (1, :)), reshape(temp_n, (1, :)), reshape(crop.wdf/100, (1, :))) .* reshape(crop.isgrowing, (1, :))
-    # crop.stoc = neural_stoc(nn_model, reshape(crop.stoc/20, (1, :)), ps, st, input)
-    crop.stoc = neural_stoc(nn_model, ps, st, input) .* crop.biomass
-
-    # compute crop rest carbon allocation
-    Zygote.ignore() do
-        carbon_allocation_pool!(crop)
-    end
-
-    crop.vegc = vcat(reshape(crop.rootc, (1, :)), reshape(crop.leafc, (1, :)), reshape(crop.stoc, (1, :)), reshape(crop.poolc, (1, :)))
-
 end
+
+# ### crop carbon allocation with hybrid Neural stoc
+# function crop_carbon_hybrid!(nn_model,
+#                              ps,
+#                              st,
+#                              photos::Photos,
+#                              crop::Crop,
+#                              PFT::PftParameters,
+#                              temp::AbstractArray{T},
+#                              temp_n::AbstractArray{T};
+#                              NODE = false
+# ) where {T <: AbstractFloat}
+
+#     # compute crop respiration
+#     Zygote.ignore() do
+#         respiration!(crop, PFT, temp, photos.agd - photos.rd)
+#     end
+
+#     # compute crop root and leaf carbon allocation
+#     Zygote.ignore() do
+#         carbon_allocation_root_leaf!(PFT, crop, photos)
+#     end
+
+#     input = vcat(reshape(crop.npp/20, (1, :)), reshape(crop.fphu, (1, :)), reshape(temp_n, (1, :)), reshape(crop.wdf/100, (1, :))) .* reshape(crop.isgrowing, (1, :))
+#     if NODE
+#         crop.stoc = neural_stoc(nn_model, reshape(crop.stoc, (1, :)), ps, st, input)
+#     else
+#         crop.stoc = neural_stoc(nn_model, ps, st, input) .* crop.biomass
+#     end
+
+#     # compute crop rest carbon allocation
+#     Zygote.ignore() do
+#         carbon_allocation_pool!(crop)
+#     end
+
+#     crop.vegc = vcat(reshape(crop.rootc, (1, :)), reshape(crop.leafc, (1, :)), reshape(crop.stoc, (1, :)), reshape(crop.poolc, (1, :)))
+
+# end
 
 function carbon_allocation_root_leaf!(PFT::PftParameters,
                                       crop::Crop,
@@ -216,8 +251,6 @@ end
     else
         crop_leafc[cell] = zero(T)
         crop_rootc[cell] = zero(T)
-        # crop_poolc[cell] = zero(T)
-        # crop_stoc[cell] = zero(T)
         crop_biomass[cell] = zero(T)
         crop_vscal_sum[cell] = zero(T)
         crop_ndf[cell] = zero(T)
