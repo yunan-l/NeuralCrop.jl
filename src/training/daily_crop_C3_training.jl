@@ -57,7 +57,7 @@ function daily_crop_C3_training!(day_start,
         photosynthesis_C3!(cft, photos, crop.apar, pet.daylength, dailyWeather.temp, dailyWeather.annual_co2; comp_vmax = true)
 
         # crop respiration and carbon allocation
-        crop_carbon_hybrid!(model.stoc, ps.ps_stoc, st.st_stoc, photos, crop, cft, dailyWeather.temp, dailyWeather.temp_n, soil.swc./soil.layer_depth)
+        crop_carbon_hybrid!(model.stoc, ps.ps_stoc, st.st_stoc, photos, crop, cft, dailyWeather.temp, dailyWeather.temp_n)
 
         Zygote.ignore() do
             crop_nitrogen!(crop, cft, soil, photos.vmax, pet.daylength, dailyWeather.temp) # nitrogen cycle
