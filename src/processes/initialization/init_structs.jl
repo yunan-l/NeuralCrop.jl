@@ -131,8 +131,12 @@ function init_weather(cell_size::Int,
         device(zeros(Float32, cell_size)),             # swr
         device(zeros(Float32, cell_size)),             # lwr
         device(zeros(Float32, cell_size)),             # temp_n
+        device(zeros(Float32, cell_size)),             # tmax_n
+        device(zeros(Float32, cell_size)),             # tmin_n
+        device(zeros(Float32, cell_size)),             # prec_n
         device(zeros(Float32, cell_size)),             # swr_n
         device(zeros(Float32, cell_size)),             # lwr_n
+        device(zeros(Float32, cell_size)),             # vpd_n
         device(zeros(Float32, cell_size)),             # daily CO2 concentration
         device(zeros(Float32, 1))                      # annual CO2 concentration
     )

@@ -14,8 +14,12 @@ mutable struct DailyWeather{T <: AbstractArray{ <: AbstractFloat}}
     swr::T
     lwr::T
     temp_n::T
+    tmax_n::T
+    tmin_n::T
+    prec_n::T
     swr_n::T
     lwr_n::T
+    vpd_n::T
     daily_co2::T
     annual_co2::T 
 end
