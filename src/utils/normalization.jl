@@ -4,7 +4,7 @@ z_score_norm(x)
 Apply z-score normalization along feature dimensions.
 Returns normalized data, mean, and standard deviation.
 """
-function z_score_norm(x::AbstractArray{T}; by_columns::Bool = false) where {T <: AbstractFloat}
+function z_score_norm(x::AbstractArray{T}; by_columns::Bool = false, precipitation::Bool = false) where {T <: AbstractFloat}
     
     if by_columns
         μ = vec(mean(x; dims = 1))
@@ -19,6 +19,9 @@ function z_score_norm(x::AbstractArray{T}; by_columns::Bool = false) where {T <:
             end
         end
     else
+        if precipitation
+            x = log1p.(x)
+        end
         μ = mean(x)
         σ = std(x)
         if σ == 0
@@ -36,7 +39,7 @@ apply_z_score(x, μ, σ)
 
 Normalize `x` using precomputed mean `μ` and standard deviation `σ`.
 """
-function apply_z_score(x::AbstractArray{T}, μ, σ; by_columns::Bool = false) where {T <: AbstractFloat}
+function apply_z_score(x::AbstractArray{T}, μ, σ; by_columns::Bool = false, precipitation::Bool = false) where {T <: AbstractFloat}
     
     if by_columns
         x_norm = similar(x)
@@ -48,6 +51,9 @@ function apply_z_score(x::AbstractArray{T}, μ, σ; by_columns::Bool = false) wh
             end
         end
     else
+        if precipitation
+            x = log1p.(x)
+        end
         if σ == 0
             x_norm = zeros(size(x))
         else
