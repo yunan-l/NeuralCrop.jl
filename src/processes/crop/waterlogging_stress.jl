@@ -4,6 +4,8 @@ waterlogging_stress!(PFT, crop, pet)
 
 Calculate waterlogging stress.
 """
+# still under development, not tested in the current version
+
 function waterlogging_stress!(crop::Crop,
                               soil::Soil,
                               photos_agd::AbstractArray{T}

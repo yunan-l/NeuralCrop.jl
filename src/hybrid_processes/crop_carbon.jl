@@ -25,7 +25,9 @@ function crop_carbon_hybrid!(nn_model, ps, st,
 
         # compute crop storage carbon allocation
         # input = vcat(reshape(crop.npp / 20, (1, :)), reshape(crop.fphu, (1, :)), reshape(dailyWeather.temp_n, (1, :)), reshape(crop.wdf / 100, (1, :))) .* reshape(crop.isgrowing, (1, :))
-        input = vcat(reshape(crop.npp / 20, (1, :)), reshape(crop.fphu, (1, :)), reshape(crop.wdf / 100, (1, :)), reshape(dailyWeather.temp_n, (1, :)), reshape(dailyWeather.swr_n, (1, :)))
+        # input = vcat(reshape(crop.npp / 20, (1, :)), reshape(crop.fphu, (1, :)), reshape(crop.wdf / 100, (1, :)), reshape(dailyWeather.temp_n, (1, :)))
+        input = vcat(reshape(crop.npp / 20, (1, :)), reshape(crop.fphu, (1, :)), reshape(crop.wdf, (1, :)), reshape(dailyWeather.prec_n, (1, :)), reshape(dailyWeather.tmax_n, (1, :)),
+                     reshape(dailyWeather.tmin_n, (1, :)), reshape(dailyWeather.swr_n, (1, :)), reshape(dailyWeather.vpd_n, (1, :))) .* reshape(crop.isgrowing, (1, :))
         if node
             crop.stoc = neural_stoc(nn_model, reshape(crop.stoc, (1, :)), ps, st, input)
         else
@@ -44,7 +46,7 @@ function crop_carbon_hybrid!(nn_model, ps, st,
             carbon_allocation!(PFT, crop, photos)
         end
 
-        input = vcat(reshape(crop.npp / 20, (1, :)), reshape(crop.fphu, (1, :)), reshape(crop.wdf / 100, (1, :)), reshape(dailyWeather.temp_n, (1, :)), reshape(dailyWeather.swr_n, (1, :)))
+        input = vcat(reshape(crop.npp / 20, (1, :)), reshape(crop.fphu, (1, :)), reshape(crop.wdf / 100, (1, :)), reshape(dailyWeather.temp_n, (1, :)))
         crop.stoc = crop.stoc + neural_stoc(nn_model, ps, st, input)
 
         crop.vegc = vcat(reshape(crop.rootc, (1, :)), reshape(crop.leafc, (1, :)), reshape(crop.stoc, (1, :)), reshape(crop.poolc, (1, :)))

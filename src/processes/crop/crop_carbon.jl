@@ -20,6 +20,6 @@ function crop_carbon!(photos::Photos,
     output.npp = vcat(output.npp, reshape(crop.npp, (1, :)))
     output.lai = vcat(output.lai, reshape(crop.lai, (1, :)))
     output.fphu = vcat(output.fphu, reshape(crop.fphu, (1, :)))
-    output.wdf = vcat(output.wdf, reshape(crop.wdf, (1, :)))
+    output.biomass = vcat(output.biomass, reshape(crop.biomass, (1, :)))
           
 end
