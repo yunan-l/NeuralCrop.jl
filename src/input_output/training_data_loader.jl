@@ -17,8 +17,8 @@ function TrainingDataLoader(data::NamedTuple,
             output = TrainingData.output[:, data_index],   
             output_n = TrainingData.output_n[:, data_index],   
             yield = TrainingData.yield[:, data_index],   
-            μ = TrainingData.μ[data_index],
-            σ = TrainingData.σ[data_index],
+            μ = TrainingData.μ,
+            σ = TrainingData.σ,
             gdhy_yield = TrainingData.gdhy_yield[:, data_index]
         ) |> device
     else training
@@ -26,8 +26,8 @@ function TrainingDataLoader(data::NamedTuple,
             output = TrainingData.output[:, data_index],   
             output_n = TrainingData.output_n[:, data_index],   
             yield = TrainingData.yield[:, data_index],   
-            μ = TrainingData.μ[data_index],
-            σ = TrainingData.σ[data_index]
+            μ = TrainingData.μ,
+            σ = TrainingData.σ
         ) |> device
     end
 
