@@ -65,7 +65,7 @@ function daily_crop_C3_training!(day_start,
         photosynthesis_C3!(pftparameters, photos, crop.apar, pet.daylength, dailyWeather.temp, dailyWeather.annual_co2; comp_vmax = true)
 
         # crop respiration and carbon allocation
-        crop_carbon_hybrid!(model.stoc, ps.stoc, st.stoc, photos, crop, pftparameters, dailyWeather.temp, dailyWeather.temp_n; node = node)
+        crop_carbon_hybrid!(model.stoc, ps.stoc, st.stoc, photos, crop, pftparameters, dailyWeather; node = node)
 
         Zygote.ignore() do
             # crop_carbon!(photos, crop, pftparameters, dailyWeather.temp)
