@@ -63,7 +63,7 @@ For a quick start, we provide a simplified demo in the examples/ directory, incl
 
 ## Usage
 
-NeuralCrop.jl is licensed under the [European Union Public Licence v1.2](https://eupl.eu/1.2/en). We warmly welcome the use of NeuralCrop.jl for academic research and educational purposes 🎓. You are encouraged to copy, modify, and build upon our code to advance scientific understanding of agricultural systems. 
+NeuralCrop.jl is released under the [European Union Public Licence v1.2](https://eupl.eu/1.2/en). You are encouraged to copy, modify, and build upon our code to advance your research. 
 
 If you are interested in contributing or have any questions, please feel free to contact <yunan.lin@tum.de>.
 
