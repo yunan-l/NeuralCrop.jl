@@ -87,10 +87,10 @@ end
                crop_poolc[cell] * crop_rootn[cell] * ratio.root * ratio.sto +
                crop_poolc[cell] * crop_ston[cell] * ratio.root * ratio.sto) / nominator
 
-          crop_leafn[cell] += a * crop_nitrogen[cell]
-          crop_rootn[cell] += b * crop_nitrogen[cell]
-          crop_ston[cell] += c * crop_nitrogen[cell]
-          crop_pooln[cell] += d * crop_nitrogen[cell]
+          crop_leafn[cell] = a * crop_nitrogen[cell]
+          crop_rootn[cell] = b * crop_nitrogen[cell]
+          crop_ston[cell] = c * crop_nitrogen[cell]
+          crop_pooln[cell] = d * crop_nitrogen[cell]
      else
           crop_leafn[cell] = zero(T)
           crop_rootn[cell] = zero(T)
