@@ -9,14 +9,11 @@ NeuralCrop.jl
 </p>
 
 <p align="center">
-  <a href="https://yunan-l.github.io/NeuralCrop.jl/">
-    <img src="https://img.shields.io/badge/documentation-latest_release-orange" alt="Docs Status">
-  </a>
   <a href="https://github.com/yunan-l/NeuralCrop.jl/actions">
     <img src="https://github.com/yunan-l/NeuralCrop.jl/actions/workflows/CI.yml/badge.svg" alt="Build Status">
   </a>
-  <a href="https://creativecommons.org/licenses/by-nc/4.0/">
-    <img alt="Creative Commons License" src="https://img.shields.io/badge/License-CC%20BY--NC%204.0-red.svg?style=flat-square">
+  <a href="https://yunan-l.github.io/NeuralCrop.jl/">
+    <img src="https://img.shields.io/badge/documentation-latest_release-orange" alt="Docs Status">
   </a>
   <a href="https://doi.org/10.48550/arXiv.2512.20177">
     <img src="https://img.shields.io/badge/DOI-10.48550/arXiv.2512.20177-blue.svg" alt="DOI">
@@ -66,9 +63,7 @@ For a quick start, we provide a simplified demo in the examples/ directory, incl
 
 ## Usage
 
-We warmly welcome the use of NeuralCrop.jl for academic research and educational purposes 🎓. You are encouraged to copy, modify, and build upon our code to advance scientific understanding of agricultural systems. 
-
-However, please note that this project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) [license](LICENSE). Any commercial application or redistribution for profit requires explicit prior authorization.
+NeuralCrop.jl is licensed under the [European Union Public Licence v1.2](https://eupl.eu/1.2/en). We warmly welcome the use of NeuralCrop.jl for academic research and educational purposes 🎓. You are encouraged to copy, modify, and build upon our code to advance scientific understanding of agricultural systems. 
 
 If you are interested in contributing or have any questions, please feel free to contact <yunan.lin@tum.de>.
 
