@@ -23,9 +23,6 @@ NeuralCrop.jl
 NeuralCrop is a differentiable global gridded crop model (GGCM) that combines the strengths of the state-of-the-art GGCM [LPJmL](https://gmd.copernicus.org/articles/11/2789/2018/) with machine learning approaches. By implementing process-based components in a differentiable form for seamless integration with machine learning methods, NeuralCrop enables end-to-end 'online training', with machine learning components optimized in tandem with the physical model dynamics. NeuralCrop is a flexible Julia framework supporting both purely process-based and hybrid simulations across CPUs and GPUs. More details are available in our preprint paper: [https://arxiv.org/abs/2512.20177](https://arxiv.org/abs/2512.20177)
 
 > [!NOTE]
->
-> NeuralCrop is under further development! Currently, NeuralCrop is unable to perform spin-up simulations to establish equilibrium soil states. The initial conditions for soil carbon, nitrogen, and water are derived from LPJmL.
->
 > The [documentation](https://yunan-l.github.io/NeuralCrop.jl/) is generated with assistance from Codex 🤖.
 
 
@@ -56,7 +53,7 @@ This will resolve compatible package versions for your Julia installation. We re
 
 ## Example use
 
-NeuralCrop does not provide the climate and management data required to drive the model, as these datasets originate from third-party sources. The necessary input data can be obtained from the [ISIMIP data repository](https://data.isimip.org/) (Inter-Sectoral Impact Model Intercomparison Project), and please cite the ISIMIP data appropriately when using it.
+<!-- NeuralCrop does not provide the climate and management data required to drive the model, as these datasets originate from third-party sources. The necessary input data can be obtained from the [ISIMIP data repository](https://data.isimip.org/) (Inter-Sectoral Impact Model Intercomparison Project), and please cite the ISIMIP data appropriately when using it. -->
 
 For a quick start, we provide a simplified demo in the examples/ directory, including 20-year forcing data (2000-2019) covering 10 grid cells. If a GPU is available and [CUDA.jl](https://github.com/JuliaGPU/CUDA.jl) is installed, we can accelerate the simulation on a GPU 🚀.
 
@@ -64,8 +61,6 @@ For a quick start, we provide a simplified demo in the examples/ directory, incl
 ## Usage
 
 NeuralCrop.jl is released under the [European Union Public Licence v1.2](https://eupl.eu/1.2/en). You are encouraged to copy, modify, and build upon our code to advance your research. 
-
-If you are interested in contributing or have any questions, please feel free to contact <yunan.lin@tum.de>.
 
 
 ## Performance benchmarks
