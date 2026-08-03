@@ -40,10 +40,10 @@ function daily_crop_C3_training!(day_start,
         end
 
         # initial crop variables in sowing day and fertilizer
-        cultivate!(crop, crop_cal, managed_land, soil, day_of_year, device)
+        cultivate!(crop, crop_cal, managed_land, soil, day_of_year)
 
         Zygote.ignore() do
-            update_climbuf!(pftparameters, dailyWeather.temp, climbuf, day, device) # update climate buffer
+            update_climbuf!(pftparameters, dailyWeather.temp, climbuf, day) # update climate buffer
             albedo!(pftparameters, crop, pet)  # compute albedo
             petpar!(pet, day_of_year, latitude, dailyWeather.temp, dailyWeather.lwr, dailyWeather.swr) # compute crop potential evapotraspiration variables
             soiltemp_lag!(soil, climbuf, device)  # compute soil temperature, using very siample linear method, now the five soil-layer temperature is same
@@ -54,7 +54,7 @@ function daily_crop_C3_training!(day_start,
             phenology_crop!(crop, climbuf.V_req, pftparameters, dailyWeather.temp, pet.daylength)
         end
         
-        harvest_crop!(crop_cal, crop, soil, output, lpjml.crop.residuefrac, device, cell_size, day_of_year) # crop harvesting
+        harvest_crop!(crop_cal, crop, soil, output, lpjml.crop.residuefrac, day_of_year) # crop harvesting
         
         Zygote.ignore() do
             apar_crop!(pftparameters, crop, pet) # crop absorbed photosynthetic radiation
@@ -65,7 +65,7 @@ function daily_crop_C3_training!(day_start,
         photosynthesis_C3!(pftparameters, photos, crop.apar, pet.daylength, dailyWeather.temp, dailyWeather.annual_co2; comp_vmax = true)
 
         # crop respiration and carbon allocation
-        crop_carbon_hybrid!(model.stoc, ps.stoc, st.stoc, photos, crop, pftparameters, dailyWeather; node = node)
+        crop_carbon_hybrid!(model.stoc, ps.stoc, st.stoc, photos, crop, soil, pftparameters, dailyWeather; node = node)
 
         Zygote.ignore() do
             # crop_carbon!(photos, crop, pftparameters, dailyWeather.temp)
