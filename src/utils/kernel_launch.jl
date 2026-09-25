@@ -1,6 +1,7 @@
 """
 Standardize KernelAbstractions launches.
-These wrappers keep backend/ndrange/synchronize logic in one place.
+These wrappers enqueue kernels on the backend's current execution stream.
+Call `synchronize_backend!` at a lifecycle boundary before host access.
 """
 
 function launch_1D!(kernelfun, ref_array, args...)
@@ -9,7 +10,6 @@ function launch_1D!(kernelfun, ref_array, args...)
     backend = KernelAbstractions.get_backend(ref_array)
     kernel = kernelfun(backend)
     kernel(ref_array, args..., ndrange = length(ref_array))
-    KernelAbstractions.synchronize(backend)
     return nothing
 end
 
@@ -18,7 +18,6 @@ function launch_2D!(kernelfun, ref_array, args...)
     backend = KernelAbstractions.get_backend(ref_array)
     kernel = kernelfun(backend)
     kernel(ref_array, args..., ndrange = (size(ref_array, 1), size(ref_array, 2)))
-    KernelAbstractions.synchronize(backend)
     return nothing
 end
 
@@ -27,6 +26,10 @@ function launch_custom!(kernelfun, ref_array, ndrange, args...)
     backend = KernelAbstractions.get_backend(ref_array)
     kernel = kernelfun(backend)
     kernel(ref_array, args..., ndrange = ndrange)
-    KernelAbstractions.synchronize(backend)
+    return nothing
+end
+
+function synchronize_backend!(ref_array)
+    KernelAbstractions.synchronize(KernelAbstractions.get_backend(ref_array))
     return nothing
 end

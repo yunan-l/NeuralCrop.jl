@@ -1,0 +1,43 @@
+[subset]
+output_directory = "/path/to/neuralcrop_global_cft_inputs"
+# Preserve every available management year. At runtime, use
+# management.mode = "transient" for histsoc or mode = "fixed" with
+# fixed_year = 2015 for 2015soc.
+management_years = "all"
+chunk_length = 31
+
+[management.landuse]
+input = "/path/to/cft_default_cft_aggregation_30min_1500-2017_fallow_to_others_64bands.nc"
+output = "landuse_24cfts_1500-2017.nc"
+variable = "landfrac"
+cft_indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]
+
+[management.fertilizer]
+input = "/path/to/fert_N_default_cft_aggregation_30min_1860-2017.nc"
+output = "fertilizer_24cfts_1860-2017.nc"
+variable = "fertilizer"
+cft_indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]
+
+[management.manure]
+input = "/path/to/manure_N_default_cft_aggregation_30min_1860-2017.nc"
+output = "manure_24cfts_1860-2017.nc"
+variable = "manure"
+cft_indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]
+
+[management.residue_fraction]
+input = "/path/to/residues_madrat_1850-2015_16bands.nc"
+output = "residue_12cfts_1850-2015.nc"
+variable = "residuefrac"
+cft_indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+[management.sowing_date]
+input = "/path/to/sdate_24_bands.nc"
+output = "sdate_24cfts_static.nc"
+variable = "sdate"
+cft_indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+
+[management.phu]
+input = "/path/to/phusum_gswp3-w5e5_obsclim_24_bands_annual_1901-2019.nc"
+output = "phu_24cfts_1901-2019.nc"
+variable = "phusum"
+cft_indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]

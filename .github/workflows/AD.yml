@@ -1,0 +1,45 @@
+name: Enzyme differentiability
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - Project.toml
+      - Manifest.toml
+      - src/**
+      - ext/**
+      - test/ad/**
+      - test/runtests_ad.jl
+      - test/Project.toml
+      - .github/workflows/AD.yml
+  pull_request:
+    paths:
+      - Project.toml
+      - Manifest.toml
+      - src/**
+      - ext/**
+      - test/ad/**
+      - test/runtests_ad.jl
+      - test/Project.toml
+      - .github/workflows/AD.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  enzyme:
+    name: Julia 1.10 - Enzyme AD
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1.10.10'
+      - uses: julia-actions/julia-buildpkg@v1
+      - name: Instantiate AD test environment
+        run: julia --startup-file=no --project=test -e 'using Pkg; Pkg.develop(Pkg.PackageSpec(path=".")); Pkg.instantiate()'
+      - name: Run Enzyme differentiability tests
+        run: julia --startup-file=no --project=test test/runtests_ad.jl

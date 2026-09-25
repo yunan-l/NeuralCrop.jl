@@ -1,1 +1,10 @@
-/Manifest.toml
+/Manifest*.toml
+/test/Manifest.toml
+/environments/mpi/Manifest.toml
+/environments/mpi/LocalPreferences.toml
+/docs/
+/config/
+/notebooks
+/lib/NeuralCropData/Manifest.toml
+/.github/workflows/Documentation.yml
+.DS_Store

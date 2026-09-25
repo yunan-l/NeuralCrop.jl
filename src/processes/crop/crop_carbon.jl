@@ -1,25 +1,53 @@
 """
-crop_carbon!(photos, PFT, crop, pet, soil, temp, co2)
+crop_carbon!(photos, CFT, crop, pet, soil, temp, co2)
 
 Run the daily crop carbon process chain: respiration, allocation, and phenology coupling.
 """
-function crop_carbon!(photos::Photos,
-                      crop::Crop,
+function crop_carbon!(crop,
                       output::Output,
-                      PFT::PftParameters,
-                      temp::AbstractArray{T}
+                      CFT::CFTParameters,
+                      air_temperature::AbstractVector{T},
+                      soil_temperature::AbstractMatrix{T};
+                      output_row::Union{Nothing, Integer} = nothing,
+                      crop_resp_fix::Bool = false,
+                      lpjmlparams::LPJmLParams = lpjmlparams,
 ) where {T <: AbstractFloat} # directly translated from LPJmL
 
     # compute crop respiration
-    respiration!(crop, PFT, temp, photos.agd - photos.rd)
+    respiration!(
+        crop, CFT, air_temperature, soil_temperature,
+        crop_fluxes(crop).carbon.gross_assimilation,
+        crop_fluxes(crop).carbon.leaf_respiration;
+        crop_resp_fix,
+        lpjmlparams = lpjmlparams,
+    )
 
-    # compute crop carbon allocation  
-    carbon_allocation!(PFT, crop, photos)
-    crop.vegc = vcat(reshape(crop.rootc, (1, :)), reshape(crop.leafc, (1, :)), reshape(crop.stoc, (1, :)), reshape(crop.poolc, (1, :)))
+    # compute crop carbon allocation
+    carbon_allocation!(CFT, crop)
 
-    output.npp = vcat(output.npp, reshape(crop.npp, (1, :)))
-    output.lai = vcat(output.lai, reshape(crop.lai, (1, :)))
-    output.fphu = vcat(output.fphu, reshape(crop.fphu, (1, :)))
-    output.biomass = vcat(output.biomass, reshape(crop.biomass, (1, :)))
-          
+    sources = (
+        gpp = crop_fluxes(crop).carbon.gross_assimilation,
+        npp = crop_fluxes(crop).carbon.npp,
+        lambda = crop_photosynthesis_auxiliary(crop).lambda,
+        potential_vcmax = crop_photosynthesis_auxiliary(crop).potential_vcmax,
+        vcmax = crop_photosynthesis_auxiliary(crop).vcmax,
+        nitrogen_limitation = crop_photosynthesis_auxiliary(crop).nitrogen_limitation,
+        respiration = crop_fluxes(crop).carbon.respiration,
+        lai = crop_canopy_auxiliary(crop).actual_lai,
+        fphu = crop_phenology_auxiliary(crop).fphu,
+        water_deficit = crop_stress_auxiliary(crop).water_deficit,
+        biomass = crop_prognostic(crop).carbon.biomass,
+    )
+    for (field, source) in pairs(sources)
+        if output_row === nothing
+            setproperty!(
+                output.crop,
+                field,
+                _append_output_row(getproperty(output.crop, field), source),
+            )
+        else
+            _write_output_row!(getproperty(output.crop, field), output_row, source)
+        end
+    end
+
 end

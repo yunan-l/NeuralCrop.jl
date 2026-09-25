@@ -1,42 +1,108 @@
 """
-carbon_allocation!(PFT, crop, photos)
+carbon_allocation!(CFT, crop, photos)
 
 Partition crop biomass among leaf/root/storage/pool carbon compartments.
 """
-function carbon_allocation!(PFT::PftParameters,
-                            crop::Crop,
-                            photos::Photos
+function carbon_allocation!(CFT::CFTParameters,
+                            crop
 )
-    # 1D cell-wise allocation; crop.stoc provides launch length and kernel arg #1.
-    kernel_params = (FROOTMAX = 0.4f0, FROOTMIN = 0.3f0)
+    # 1D cell-wise allocation; crop_prognostic(crop).carbon.storage provides launch length and kernel arg #1.
+    T = eltype(crop_prognostic(crop).carbon.storage)
+    kernel_params = (FROOTMAX = T(0.4), FROOTMIN = T(0.3))
 
     launch_1D!(carbon_allocation_kernel!,
-               crop.stoc,
-               crop.isgrowing,
-               crop.growingdays,
-               crop.vscal_sum,
-               crop.vscal,
-               crop.ndf,
-               crop.wdf,
-               crop.fphu,
-               crop.senescence,
-               crop.biomass,
-               crop.resp,
-               photos.agd,
-               photos.rd,
-               crop.npp,
-               crop.lai,
-               crop.leafc,
-               crop.rootc,
-               crop.poolc,
-               crop.lai_nppdeficit,
-               PFT,
-               kernel_params)
+               crop_prognostic(crop).carbon.storage,
+               crop_events(crop).harvest,
+               crop_prognostic(crop).phenology.is_growing,
+               crop_prognostic(crop).phenology.growing_days,
+               crop_prognostic(crop).nitrogen.stress_sum,
+               crop_prognostic(crop).nitrogen.sufficiency,
+               crop_stress_auxiliary(crop).nitrogen_deficit,
+               crop_stress_auxiliary(crop).water_deficit,
+               crop_phenology_auxiliary(crop).fphu,
+               crop_prognostic(crop).phenology.senescence,
+               crop_prognostic(crop).carbon.biomass,
+               crop_fluxes(crop).carbon.respiration,
+               crop_fluxes(crop).carbon.gross_assimilation,
+               crop_fluxes(crop).carbon.leaf_respiration,
+               crop_fluxes(crop).carbon.npp,
+               crop_prognostic(crop).canopy.lai,
+               crop_canopy_auxiliary(crop).actual_lai,
+               crop_prognostic(crop).carbon.leaf,
+               crop_prognostic(crop).carbon.root,
+               crop_prognostic(crop).carbon.pool,
+               crop_prognostic(crop).canopy.lai_npp_deficit,
+               kernel_constant(
+                   crop_prognostic(crop).carbon.storage,
+                   (; CFT, kernel_params),
+               ))
 
+end
+
+"""Compute daily NPP after leaf, maintenance, and growth respiration."""
+@inline compute_crop_npp(
+    gross_assimilation::T, leaf_respiration::T, crop_respiration::T,
+) where {T <: AbstractFloat} =
+    gross_assimilation - leaf_respiration - crop_respiration
+
+"""Compute the seasonal nitrogen sufficiency percentage used by root allocation."""
+@inline function compute_seasonal_nitrogen_sufficiency(
+    accumulated_sufficiency::T, growing_days::S,
+) where {T <: AbstractFloat, S <: Integer}
+    return growing_days > zero(S) ? accumulated_sufficiency / T(growing_days) * T(100) : T(100)
+end
+
+"""Compute SWAT-style root-carbon fraction from water/N stress and phenology."""
+@inline function compute_root_carbon_fraction(
+    water_sufficiency::T,
+    nitrogen_sufficiency::T,
+    phenology_fraction::T,
+    root_maximum::T,
+    root_minimum::T,
+) where {T <: AbstractFloat}
+    stress = min(water_sufficiency, nitrogen_sufficiency)
+    return root_maximum - (root_minimum * phenology_fraction) * stress /
+           (stress + exp(T(6.13) - T(0.0883) * stress))
+end
+
+"""Compute water-limited LPJmL harvest index for one crop stand."""
+@inline function compute_harvest_index(
+    phenology_fraction::T,
+    optimal_index::T,
+    minimum_index::T,
+    water_sufficiency::T,
+) where {T <: AbstractFloat}
+    potential = T(100) * phenology_fraction /
+                (T(100) * phenology_fraction +
+                 exp(T(11.1) - T(10) * phenology_fraction))
+    optimal = optimal_index > one(T) ? potential * (optimal_index - one(T)) + one(T) :
+              potential * optimal_index
+    minimum = minimum_index > one(T) ? potential * (minimum_index - one(T)) + one(T) :
+              potential * minimum_index
+    water_sufficiency >= zero(T) || return optimal
+    return (optimal - minimum) * water_sufficiency /
+           (water_sufficiency + exp(T(6.13) - T(0.0883) * water_sufficiency)) + minimum
+end
+
+"""Compute and mass-cap storage carbon after leaf/root allocation."""
+@inline function compute_storage_carbon(
+    biomass::T,
+    leaf_carbon::T,
+    root_carbon::T,
+    root_fraction::T,
+    harvest_index::T,
+    optimal_index::T,
+) where {T <: AbstractFloat}
+    leaf_carbon + root_carbon < biomass || return zero(T)
+    candidate = optimal_index > one(T) ?
+                (one(T) - one(T) / harvest_index) * (one(T) - root_fraction) * biomass :
+                harvest_index * (one(T) - root_fraction) * biomass
+    return min(candidate, biomass - leaf_carbon - root_carbon)
 end
 
 @kernel inbounds = true function carbon_allocation_kernel!(
                                            crop_stoc::AbstractArray{T},
+                                           crop_harvest::AbstractArray{S},
                                            crop_isgrowing::AbstractArray{S},
                                            crop_growingdays::AbstractArray{S},
                                            crop_vscal_sum::AbstractArray{T},
@@ -51,39 +117,46 @@ end
                                            photos_rd::AbstractArray{T},
                                            crop_npp::AbstractArray{T},
                                            crop_lai::AbstractArray{T},
+                                           crop_actual_lai::AbstractArray{T},
                                            crop_leafc::AbstractArray{T},
                                            crop_rootc::AbstractArray{T},
                                            crop_poolc::AbstractArray{T},
                                            crop_lai_nppdeficit::AbstractArray{T},
-                                           PFT::PftParameters,
-                                           kernel_params
+                                           fixed_parameters,
 ) where {T <: AbstractFloat, B <: Bool, S <: Integer}
 
     cell = @index(Global)
+    parameters = kernel_value(fixed_parameters)
+    CFT = parameters.CFT
+    kernel_params = parameters.kernel_params
 
-    @unpack sla, hiopt, himin = PFT
+    @unpack sla, hiopt, himin = CFT
     @unpack FROOTMAX, FROOTMIN = kernel_params
 
     if crop_isgrowing[cell] == 1
-        # Undo LAI deficit correction from previous step before current-day allocation.
-        crop_lai[cell] = crop_lai[cell] - crop_lai_nppdeficit[cell]
-        # NPP = gross daytime photosynthesis - dark respiration - growth respiration bookkeeping.
-        crop_npp[cell] = (photos_agd[cell] - photos_rd[cell] - crop_resp[cell])
-        if ((crop_biomass[cell] + crop_npp[cell]) <= T(0.0001)) || ((crop_lai[cell] <= zero(T)) && (!crop_senescence[cell]))
+        # LPJmL preserves the potential phenological LAI and applies the NPP
+        # deficit only when actual LAI is consumed or reported.
+        actual_lai = max(zero(T), crop_lai[cell] - crop_lai_nppdeficit[cell])
+        # Complete crop carbon cost: leaf respiration plus maintenance/growth
+        # respiration, including root respiration.
+        crop_npp[cell] = compute_crop_npp(photos_agd[cell], photos_rd[cell], crop_resp[cell])
+        if ((crop_biomass[cell] + crop_npp[cell]) <= T(0.0001)) || ((actual_lai <= zero(T)) && (!crop_senescence[cell]))
+            # LPJmL reports `negbm` here. The daily driver then harvests the
+            # remaining pools and removes the failed crop stand.
             crop_poolc[cell] += crop_npp[cell]
             crop_biomass[cell] += crop_npp[cell]
+            crop_harvest[cell] = one(S)
         else
             crop_biomass[cell] += crop_npp[cell]
             crop_vscal_sum[cell] += crop_vscal[cell]
-            if crop_growingdays[cell] > 0
-                crop_ndf[cell] = crop_vscal_sum[cell] / crop_growingdays[cell] * 100
-            else
-                crop_ndf[cell] = T(100)
-            end
+            crop_ndf[cell] = compute_seasonal_nitrogen_sufficiency(
+                crop_vscal_sum[cell], crop_growingdays[cell],
+            )
 
             # Root carbon follows SWAT-style stress-scaled partitioning.
-            df = min(crop_wdf[cell], crop_ndf[cell])
-            froot = FROOTMAX - (FROOTMIN * crop_fphu[cell]) * df / (df + exp(T(6.13) - T(0.0883) * df))
+            froot = compute_root_carbon_fraction(
+                crop_wdf[cell], crop_ndf[cell], crop_fphu[cell], FROOTMAX, FROOTMIN,
+            )
             crop_rootc[cell] = froot * crop_biomass[cell]
 
             # Leaf carbon is constrained by LAI and SLA; in senescence it is mass-balanced.
@@ -105,26 +178,10 @@ end
             end
 
             # Storage carbon (harvest index branch) is computed after leaf/root partitioning.
-            fhiopt = 100 * crop_fphu[cell] / (100 * crop_fphu[cell] + exp(T(11.1) - T(10.0) * crop_fphu[cell]))
-            hi = hiopt > 1.0 ? fhiopt * (hiopt - one(T)) + one(T) : fhiopt * hiopt
-            himind = himin > 1.0 ? fhiopt * (himin - one(T)) + one(T) : fhiopt * himin
-
-            if crop_wdf[cell] >= zero(T)
-                hi = (hi - himind) * crop_wdf[cell] / (crop_wdf[cell] + exp(T(6.13) -T(0.0883) * crop_wdf[cell])) + himind
-            end
-
-            if (crop_leafc[cell] + crop_rootc[cell]) < crop_biomass[cell]
-                if hiopt > 1.0
-                    crop_stoc[cell] = (one(T) - one(T) / hi) * (one(T) - froot) * crop_biomass[cell]
-                else
-                    crop_stoc[cell] = hi * (one(T) - froot) * crop_biomass[cell]
-                end
-                if (crop_leafc[cell] + crop_rootc[cell] + crop_stoc[cell]) > crop_biomass[cell]
-                    crop_stoc[cell] = crop_biomass[cell] - crop_leafc[cell] - crop_rootc[cell]
-                end
-            else
-                crop_stoc[cell] = zero(T)
-            end
+            hi = compute_harvest_index(crop_fphu[cell], T(hiopt), T(himin), crop_wdf[cell])
+            crop_stoc[cell] = compute_storage_carbon(
+                crop_biomass[cell], crop_leafc[cell], crop_rootc[cell], froot, hi, T(hiopt),
+            )
 
             # Pool carbon closes biomass balance and is clipped during senescence if negative.
             crop_poolc[cell] = crop_biomass[cell] - crop_leafc[cell] - crop_rootc[cell] - crop_stoc[cell]
@@ -158,6 +215,9 @@ end
         crop_biomass[cell] = zero(T)
         crop_vscal_sum[cell] = zero(T)
         crop_ndf[cell] = zero(T)
+        crop_lai_nppdeficit[cell] = zero(T)
     end
+
+    crop_actual_lai[cell] = max(zero(T), crop_lai[cell] - crop_lai_nppdeficit[cell])
 
 end

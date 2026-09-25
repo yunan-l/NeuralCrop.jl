@@ -17,12 +17,19 @@ function ppm2bar(co2::AbstractArray{T}) where {T <: AbstractFloat} # Convert ppm
 end
     
 """Convert hours to day fraction."""
+@inline function hour2day(hour::T) where {T <: AbstractFloat}
+    return hour * T(0.04166666666666666666)
+end
+
 function hour2day(hour::AbstractArray{T}) where {T <: AbstractFloat} # Convert hour --> day
-        
     return hour * T(0.04166666666666666666)
 end
 
 """Convert hours to seconds."""
+@inline function hour2sec(hour::T) where {T <: AbstractFloat}
+    return hour * T(3600)
+end
+
 function hour2sec(hour::AbstractArray{T}) where {T <: AbstractFloat} # Convert hour --> sec
         
     return hour * T(3600)

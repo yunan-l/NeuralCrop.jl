@@ -1,74 +1,65 @@
 """
-ndemand_crop!(crop, PFT, photos_vmax, pet_daylength, temp)
+ndemand_crop!(crop, CFT, photos_vcmax, temp)
 
 Compute crop nitrogen demand from photosynthetic potential and organ stoichiometry.
 """
-function ndemand_crop!(crop::Crop,
-                       PFT::PftParameters,
-                       photos_vmax::AbstractArray{T},
-                       pet_daylength::AbstractArray{T},
+function ndemand_crop!(crop,
+                       CFT::CFTParameters,
+                       photos_vcmax::AbstractArray{T},
                        temp::AbstractArray{T};
                        lpjmlparams::LPJmLParams = lpjmlparams
 ) where {T <: AbstractFloat}
 
-    kernel_params = (lpjmlparams = lpjmlparams, k_l = 0.08f0) # k_l = 0.08f0  Priestley-Taylor coefficient
+    kernel_params = (lpjmlparams = lpjmlparams,)
 
     launch_1D!(
         ndemand_crop_kernel!,
-        crop.ndemand_tot,
-        crop.lai, 
-        crop.leafc, 
-        crop.rootc, 
-        crop.poolc, 
-        crop.stoc, 
-        crop.ndemand_leaf,
-        crop.isgrowing, 
-        pet_daylength, 
-        photos_vmax, 
+        crop_stress_auxiliary(crop).nitrogen_demand_total,
+        crop_prognostic(crop).carbon.leaf,
+        crop_prognostic(crop).carbon.root,
+        crop_prognostic(crop).carbon.pool,
+        crop_prognostic(crop).carbon.storage,
+        crop_stress_auxiliary(crop).nitrogen_demand_leaf,
+        crop_prognostic(crop).phenology.is_growing,
+        photos_vcmax,
         temp,
-        PFT,
-        kernel_params
+        kernel_constant(
+            crop_stress_auxiliary(crop).nitrogen_demand_total,
+            (; CFT, kernel_params),
+        ),
     )
-  
+
 end
 
 @kernel inbounds = true function ndemand_crop_kernel!(
                                       crop_ndemand_tot::AbstractArray{T},
-                                      crop_lai::AbstractArray{T},
                                       crop_leafc::AbstractArray{T},
                                       crop_rootc::AbstractArray{T},
                                       crop_poolc::AbstractArray{T},
                                       crop_stoc::AbstractArray{T},
                                       crop_ndemand_leaf::AbstractArray{T},
                                       crop_isgrowing::AbstractArray{S},
-                                      pet_daylength::AbstractArray{T},
-                                      photos_vmax::AbstractArray{T},
+                                      photos_vcmax::AbstractArray{T},
                                       temp::AbstractArray{T},
-                                      PFT::PftParameters,
-                                      kernel_params
+                                      fixed_parameters,
 ) where {T <: AbstractFloat, S <: Integer}
-    
+
     cell = @index(Global)
-    
-    @unpack lpjmlparams, k_l = kernel_params
+    parameters = kernel_value(fixed_parameters)
+    CFT = parameters.CFT
+    kernel_params = parameters.kernel_params
+
+    @unpack lpjmlparams = kernel_params
 
     @unpack p, k_temp = lpjmlparams
-    @unpack fpc, intc, ratio, ncleaf = PFT
+    @unpack ratio, ncleaf = CFT
 
     if crop_isgrowing[cell] == 1
-        f_lai = zero(T)
-        if crop_lai[cell] < one(T)
-            f_lai = max(T(0.1), crop_lai[cell])
-        else
-            f_lai = exp(k_l * min(crop_lai[cell], T(7)))
-        end
-
-        # ndemand_leaf = zero(T)
-        if pet_daylength[cell] == zero(T)
-            crop_ndemand_leaf[cell] = ncleaf.median * crop_leafc[cell]
-        else
-            crop_ndemand_leaf[cell] = p * T(0.02314815) / pet_daylength[cell] * photos_vmax[cell] * exp(-k_temp * (temp[cell] - T(25.0))) * f_lai + ncleaf.median * crop_leafc[cell]
-        end
+        # LPJmL ndemand_crop: Rubisco requirement plus structural minimum leaf N.
+        rubisco_demand = T(p) * T(1e-3) * photos_vcmax[cell] /
+                         (T(86400) * T(12) * T(1e-6)) *
+                         exp(-T(k_temp) * (temp[cell] - T(25)))
+        crop_ndemand_leaf[cell] = rubisco_demand + T(ncleaf.low) * crop_leafc[cell]
 
         nc_ratio = zero(T)
         if crop_leafc[cell] > zero(T)

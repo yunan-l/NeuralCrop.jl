@@ -1,249 +1,457 @@
 """
-nitrogen_transform!(soil, c_shift_fast, c_shift_slow; lpjmlparams=lpjmlparams, k_l=0.0f0)
+nitrogen_transform!(soil; air_temperature=nothing, wind_speed=nothing,
+                    lpjmlparams=lpjmlparams)
 
-Apply mineralization, immobilization, and nitrification transformations in soil N pools.
+Apply the LPJmL-style daily mineralization/immobilization, nitrification,
+denitrification, and NH₃-volatilization sequence. Internal and boundary
+fluxes are stored layer-wise in `soil.nitrogen` for diagnostics.
 """
-function nitrogen_transform!(soil::Soil;
+function nitrogen_transform!(soil;
+                             air_temperature = nothing,
+                             wind_speed = nothing,
+    lpjmlparams::LPJmLParams = lpjmlparams)
+    mineralize_nitrify!(soil; lpjmlparams = lpjmlparams)
+    post_crop_nitrogen_losses!(
+        soil;
+        air_temperature = air_temperature,
+        wind_speed = wind_speed,
+        lpjmlparams = lpjmlparams,
+    )
+    return nothing
+end
+
+"""
+    mineralize_nitrify!(soil; lpjmlparams=lpjmlparams)
+
+Release SOM and litter nitrogen, satisfy litter immobilization demand, and
+nitrify the remaining ammonium. LPJmL performs this stage before the daily
+plant processes, so the newly mineralized nitrogen is available for same-day
+crop uptake.
+"""
+function mineralize_nitrify!(soil;
                              lpjmlparams::LPJmLParams = lpjmlparams,
-                             k_l = 0.0f0 # Parton et al., 2001 equ. 2
-)
+                             shift_fast = soil_decomposition_input(soil).shift_fast,
+                             shift_slow = soil_decomposition_input(soil).shift_slow)
+    soil_layers = size(soil_nitrogen_prognostic(soil).nitrate, 1)
+    launch_custom!(
+        mineralize_immobilize_kernel!,
+        soil_carbon_fluxes(soil).decomposed_litter,
+        size(soil_carbon_fluxes(soil).decomposed_litter, 2),
+        soil_nitrogen_fluxes(soil).decomposed_litter,
+        soil_nitrogen_fluxes(soil).decomposed_fast,
+        soil_nitrogen_fluxes(soil).decomposed_slow,
+        shift_fast,
+        shift_slow,
+        soil_nitrogen_prognostic(soil).ammonium,
+        soil_nitrogen_prognostic(soil).nitrate,
+        soil_nitrogen_prognostic(soil).fast,
+        soil_nitrogen_prognostic(soil).slow,
+        soil_properties(soil).layer_depth,
+        soil_nitrogen_fluxes(soil).mineralization,
+        soil_nitrogen_fluxes(soil).immobilization,
+        kernel_constant(
+            soil_carbon_fluxes(soil).decomposed_litter,
+            (; lpjmlparams, soil_layers),
+        ),
+    )
 
-    @unpack fastfrac, atmfrac, k_soil10 = lpjmlparams
+    launch_1D!(
+        nitrify_kernel!,
+        soil_properties(soil).ph,
+        soil_nitrogen_prognostic(soil).ammonium,
+        soil_nitrogen_prognostic(soil).nitrate,
+        soil_water_auxiliary(soil).relative_content,
+        soil_water_auxiliary(soil).holding_capacity_storage,
+        soil_water_auxiliary(soil).wilting_storage,
+        soil_water_prognostic(soil).wilting_ice_fraction,
+        soil_water_auxiliary(soil).free_water,
+        soil_water_auxiliary(soil).saturation_storage,
+        soil_thermal_prognostic(soil).temperature,
+        soil_nitrogen_fluxes(soil).nitrification,
+        soil_nitrogen_fluxes(soil).n2o_nitrification,
+        kernel_constant(
+            soil_properties(soil).ph, (; lpjmlparams, soil_layers),
+        ),
+    )
 
-    # NO3 and N2O from mineralization of litter organic matter
-    # c_shift_* already includes layer-wise redistribution from equilibrium spin-up.
-    F_Nmineral = sum(soil.decom_litn, dims = 1) * atmfrac .* (fastfrac * soil.c_shift_fast + (1.0f0 - fastfrac) * soil.c_shift_slow);
-    soil.NH4 .+= F_Nmineral * (1 - k_l)
-    soil.NO3 .+= F_Nmineral * k_l
-
-    # NO3 and N2O from mineralization of soil organic matter
-    F_Nmineral = soil.decom_fastn + soil.decom_slown
-    soil.NH4 .+= F_Nmineral * (1 - k_l)
-    soil.NO3 .+= F_Nmineral * k_l
-
-    # Immobilization consumes mineral N (NH4 + NO3) and transfers it to slow soil pools.
-    # decom_sum_lit* are reduced to 1D cell vectors for 1D kernel launch.
-    decom_sum_litc = vec(sum(soil.decom_litc, dims = 1))
-    decom_sum_litn = vec(sum(soil.decom_litn, dims = 1))
-    kernel_params_immo = (lpjmlparams = lpjmlparams, cn_ratio = 15.0f0, soil_layers = 5, k_N = 5f-3)
-
-    launch_1D!(immobilize_kernel!,
-                decom_sum_litc, 
-                decom_sum_litn,
-                soil.NH4,
-                soil.NO3,
-                soil.fastn,
-                soil.slown,
-                soil.c_shift_fast,
-                soil.c_shift_slow,
-                soil.layer_depth,
-                kernel_params_immo)
-
-    # Nitrification converts NH4 to NO3 with soil moisture/temperature modifiers.
-    kernel_params_nit = (lpjmlparams = lpjmlparams, soil_layers = 5, a_nit = 0.45f0, b_nit = 1.27f0, c_nit = 0.0012f0, d_nit = 2.84f0)
-    
-    launch_1D!(nitrify_kernel!,
-                soil.ph,
-                soil.NH4,
-                soil.NO3,
-                soil.swc,
-                soil.wsats,
-                soil.temp,
-                kernel_params_nit)
-
-    #  Denitrification: NO3 -> N2O + N2.
-    kernel_params_denit = (lpjmlparams = lpjmlparams, soil_layers = 5)
-    launch_1D!(denitrify_kernel!,
-                soil.fastc,
-                soil.slowc,
-                soil.w,
-                soil.whcs,
-                soil.wpwps,
-                soil.w_fw,
-                soil.wsats,
-                soil.temp,
-                soil.NO3,
-                kernel_params_denit)
-
-    # NH3 volatilization from top-layer NH4 (no wind forcing available yet, uses default parameter).
-    launch_1D!(volatilization_kernel!,
-                soil.NH4,
-                soil.ph,
-                soil.temp,
-                soil.layer_depth,
-                lpjmlparams)
-
+    return nothing
 end
 
+"""
+    post_crop_nitrogen_losses!(soil; air_temperature=nothing,
+                               wind_speed=nothing, lpjmlparams=lpjmlparams)
 
-@kernel inbounds = true function immobilize_kernel!(decom_sum_litc::AbstractArray{T},
-                                    decom_sum_litn::AbstractArray{T},
-                                    soil_NH4::AbstractArray{M},           
-                                    soil_NO3::AbstractArray{M},
-                                    soil_fastn::AbstractArray{M},
-                                    soil_slown::AbstractArray{M},
-                                    c_shift_fast::AbstractArray{T},
-                                    c_shift_slow::AbstractArray{T},
-                                    soil_layer_depth::AbstractArray{T},
-                                    kernel_params_immo
-) where {T <: AbstractFloat, M <: AbstractFloat}
-    
-    cell = @index(Global)
+Apply denitrification and ammonia volatilization after crop uptake, matching
+LPJmL's daily stand ordering.
+"""
+function post_crop_nitrogen_losses!(soil;
+                                    air_temperature = nothing,
+                                    wind_speed = nothing,
+                                    lpjmlparams::LPJmLParams = lpjmlparams)
+    soil_layers = size(soil_nitrogen_prognostic(soil).nitrate, 1)
 
-    @unpack lpjmlparams, cn_ratio, soil_layers, k_N = kernel_params_immo
-    @unpack fastfrac, atmfrac = lpjmlparams
+    launch_1D!(
+        denitrify_kernel!,
+        soil_properties(soil).ph,
+        soil_carbon_prognostic(soil).fast,
+        soil_carbon_prognostic(soil).slow,
+        soil_water_auxiliary(soil).relative_content,
+        soil_water_auxiliary(soil).holding_capacity_storage,
+        soil_water_auxiliary(soil).wilting_storage,
+        soil_water_prognostic(soil).wilting_ice_fraction,
+        soil_water_auxiliary(soil).free_water,
+        soil_water_auxiliary(soil).saturation_storage,
+        soil_thermal_prognostic(soil).temperature,
+        soil_nitrogen_prognostic(soil).nitrate,
+        soil_nitrogen_fluxes(soil).denitrification,
+        soil_nitrogen_fluxes(soil).n2o_denitrification,
+        soil_nitrogen_fluxes(soil).n2_denitrification,
+        kernel_constant(
+            soil_properties(soil).ph, (; lpjmlparams, soil_layers),
+        ),
+    )
 
-    # Each thread updates all soil layers for one cell.
-    for l in 1:soil_layers
-
-        N_sum = soil_NH4[l, cell] + soil_NO3[l, cell]
-        if(N_sum > 0) # immobilization of N 
-            n_immo = fastfrac * (1 - atmfrac) * (decom_sum_litc[cell] / cn_ratio - decom_sum_litn[cell]) * c_shift_fast[l, cell] * N_sum / soil_layer_depth[l] * 1f3 / (k_N + N_sum / soil_layer_depth[l] * 1f3)
-            if(n_immo > 0)
-                if(n_immo > N_sum)
-                    n_immo = N_sum
-                end
-                soil_fastn[l, cell] += n_immo
-                soil_NH4[l, cell] -= n_immo * soil_NH4[l, cell] / N_sum
-                soil_NO3[l, cell] -= n_immo * soil_NO3[l, cell] / N_sum
-            end
-        end
-
-        # Fast/slow litter fractions are handled separately with different shift factors.
-        N_sum = soil_NH4[l, cell] + soil_NO3[l, cell]
-        if(N_sum > 0) # immobilization of N 
-            n_immo = (1 - fastfrac) * (1 - atmfrac) * (decom_sum_litc[cell] / cn_ratio - decom_sum_litn[cell]) * c_shift_slow[l, cell] * N_sum / soil_layer_depth[l] * 1f3 / (k_N + N_sum / soil_layer_depth[l] * 1f3)
-            if(n_immo > 0)
-                if(n_immo > N_sum)
-                    n_immo = N_sum
-                end
-                soil_slown[l, cell] += n_immo
-                soil_NH4[l, cell] -= n_immo * soil_NH4[l, cell] / N_sum
-                soil_NO3[l, cell] -= n_immo * soil_NO3[l, cell] / N_sum
-            end
-        end
+    volatilization_temperature = air_temperature === nothing ?
+        vec(@view(soil_thermal_prognostic(soil).temperature[1, :])) : air_temperature
+    volatilization_wind = if wind_speed === nothing
+        fallback = soil_decomposition_workspace(soil).surface_scratch_1
+        fill!(fallback, eltype(fallback)(lpjmlparams.volatil_wind))
+        fallback
+    else
+        wind_speed
     end
-
+    launch_1D!(
+        volatilization_kernel!,
+        soil_properties(soil).ph,
+        soil_nitrogen_prognostic(soil).ammonium,
+        volatilization_temperature,
+        volatilization_wind,
+        soil_properties(soil).layer_depth,
+        soil_nitrogen_fluxes(soil).volatilization,
+        kernel_constant(soil_properties(soil).ph, lpjmlparams),
+    )
+    return nothing
 end
 
+"""
+    compute_water_filled_pore_space(relative_water, holding, wilting, ice_fraction,
+                                    free_water, saturation)
+
+Return liquid water-filled pore space in `[0, 1]`. This is shared by the
+LPJmL nitrification and denitrification response formulations; ice is removed
+from the wilting-water contribution before the ratio is formed.
+"""
+@inline function compute_water_filled_pore_space(relative_water::T,
+                                                  holding::T,
+                                                  wilting::T,
+                                                  wilting_ice_fraction::T,
+                                                  free_water::T,
+                                                  saturation::T) where {T <: AbstractFloat}
+    liquid_water = relative_water * holding +
+        wilting * (one(T) - wilting_ice_fraction) + free_water
+    return clamp(liquid_water / max(saturation, eps(T)), zero(T), one(T))
+end
+
+"""
+    compute_nitrification_moisture_response(wfps, b, c, d, n, m, z)
+
+Evaluate LPJmL's bounded two-branch water-filled-pore-space response. The
+explicit positive-base guard avoids fractional powers of a negative value.
+"""
+@inline function compute_nitrification_moisture_response(wfps::T,
+                                                          b::T,
+                                                          c::T,
+                                                          d::T,
+                                                          n::T,
+                                                          m::T,
+                                                          z::T) where {T <: AbstractFloat}
+    first_base = (wfps - b) / n
+    second_base = (wfps - c) / m
+    (first_base > zero(T) && second_base > zero(T)) || return zero(T)
+    return max(zero(T), first_base^z * second_base^d)
+end
+
+"""
+    compute_nitrification_temperature_response(temperature)
+
+Gaussian optimum-temperature response used by LPJmL nitrification.
+"""
+@inline function compute_nitrification_temperature_response(temperature::T) where {T <: AbstractFloat}
+    return exp(-(temperature - T(18.79))^2 / T(2 * 8.26 * 8.26))
+end
+
+"""
+    compute_nitrification_ph_response(ph)
+
+Smooth pH multiplier for nitrification. It intentionally remains unclamped to
+match the source formulation and its calibrated parameter range.
+"""
+@inline function compute_nitrification_ph_response(ph::T) where {T <: AbstractFloat}
+    return T(0.56) + atan(T(pi) * T(0.45) * (ph - T(5))) / T(pi)
+end
+
+"""
+    compute_denitrification_temperature_response(temperature)
+
+Piecewise LPJmL denitrification temperature response, including the low-
+temperature baseline and high-temperature cutoff.
+"""
+@inline function compute_denitrification_temperature_response(temperature::T) where {T <: AbstractFloat}
+    temperature > T(45.9) && return zero(T)
+    temperature <= zero(T) && return T(0.0326)
+    return max(zero(T), T(0.0326) + T(0.00351) * temperature^T(1.652) -
+        (temperature / T(41.748))^T(7.19))
+end
+
+"""
+    compute_denitrification_moisture_response(wfps)
+
+Exponential anaerobic moisture limitation capped at one.
+"""
+@inline function compute_denitrification_moisture_response(wfps::T) where {T <: AbstractFloat}
+    return min(one(T), T(6.664096e-10) * exp(T(20.92912) * wfps))
+end
+
+"""
+    compute_ammonia_volatilization(ammonium, ph, temperature, wind, depth, length)
+
+Return the LPJmL daily NH₃ loss from the upper ammonium pool. All quantities
+are scalar, so the balance-preserving subtraction remains visible in the
+calling kernel.
+"""
+@inline function compute_ammonia_volatilization(ammonium::T,
+                                                 ph::T,
+                                                 temperature::T,
+                                                 wind::T,
+                                                 depth::T,
+                                                 volatilization_length::T) where {T <: AbstractFloat}
+    available = max(zero(T), ammonium)
+    kelvin = temperature + T(273.15)
+    dissociation = T(10)^(T(0.05) - T(2788) / kelvin)
+    aqueous_fraction = one(T) / (one(T) + T(10)^(-ph) / max(dissociation, eps(T)))
+    aqueous_nh3 = aqueous_fraction * available / max(depth, eps(T)) * T(1000)
+    henry = T(0.2138) / kelvin * T(10)^(T(6.123) - T(1825) / kelvin)
+    transfer = T(0.000612) * max(zero(T), wind)^T(0.8) * kelvin^T(0.382) *
+        volatilization_length^T(-0.2)
+    return clamp(T(86400) * transfer * henry * aqueous_nh3, zero(T), available)
+end
+
+@kernel inbounds = true function mineralize_immobilize_kernel!(
+    decomposed_litter_carbon::AbstractMatrix{T},
+    decomposed_litter_nitrogen::AbstractMatrix{T},
+    decomposed_fast_nitrogen::AbstractArray{M},
+    decomposed_slow_nitrogen::AbstractArray{M},
+    shift_fast::AbstractArray{M},
+    shift_slow::AbstractArray{M},
+    ammonium::AbstractArray{M},
+    nitrate::AbstractArray{M},
+    fast_nitrogen::AbstractArray{M},
+    slow_nitrogen::AbstractArray{M},
+    layer_depth::AbstractArray{T},
+    mineralization::AbstractArray{M},
+    immobilization::AbstractArray{M},
+    fixed_parameters,
+) where {T <: AbstractFloat, M <: AbstractFloat}
+    cell = @index(Global)
+    kernel_params = kernel_value(fixed_parameters)
+    @unpack lpjmlparams, soil_layers = kernel_params
+    @unpack atmfrac, fastfrac, soil_cn_ratio, immobilization_k = lpjmlparams
+
+    litter_carbon = decomposed_litter_carbon[1, cell] +
+        decomposed_litter_carbon[2, cell] + decomposed_litter_carbon[3, cell]
+    litter_nitrogen = decomposed_litter_nitrogen[1, cell] +
+        decomposed_litter_nitrogen[2, cell] + decomposed_litter_nitrogen[3, cell]
+    carbon_nitrogen_deficit = litter_carbon / T(soil_cn_ratio) - litter_nitrogen
+
+    for layer in 1:soil_layers
+        mineralization[layer, cell] = zero(M)
+        immobilization[layer, cell] = zero(M)
+
+        # LPJmL keeps c_shift as a normalized vertical distribution. Apply the
+        # fast/slow split and atmospheric fraction explicitly to each flux.
+        litter_mineralization = max(
+            zero(M),
+            litter_nitrogen * T(atmfrac) *
+            (T(fastfrac) * shift_fast[layer, cell] +
+             (one(T) - T(fastfrac)) * shift_slow[layer, cell]),
+        )
+        som_mineralization = max(
+            zero(M),
+            decomposed_fast_nitrogen[layer, cell] +
+            decomposed_slow_nitrogen[layer, cell],
+        )
+        gross_mineralization = litter_mineralization + som_mineralization
+        ammonium[layer, cell] += gross_mineralization
+        mineralization[layer, cell] = gross_mineralization
+
+        if carbon_nitrogen_deficit > zero(T)
+            available = max(zero(M), ammonium[layer, cell] + nitrate[layer, cell])
+            if available > zero(M)
+                concentration = available / max(layer_depth[layer], eps(T)) * T(1000)
+                limitation = concentration / (T(immobilization_k) + concentration)
+
+                fast_immobilization = max(
+                    zero(M),
+                    carbon_nitrogen_deficit * T(fastfrac) *
+                    (one(T) - T(atmfrac)) * shift_fast[layer, cell] * limitation,
+                )
+                fast_immobilization = min(fast_immobilization, available)
+                if fast_immobilization > zero(M)
+                    ammonium_share = ammonium[layer, cell] / available
+                    ammonium[layer, cell] -= fast_immobilization * ammonium_share
+                    nitrate[layer, cell] -= fast_immobilization * (one(M) - ammonium_share)
+                    fast_nitrogen[layer, cell] += fast_immobilization
+                    immobilization[layer, cell] += fast_immobilization
+                end
+
+                available = max(zero(M), ammonium[layer, cell] + nitrate[layer, cell])
+                if available > zero(M)
+                    concentration = available / max(layer_depth[layer], eps(T)) * T(1000)
+                    limitation = concentration / (T(immobilization_k) + concentration)
+                    slow_immobilization = max(
+                        zero(M),
+                        carbon_nitrogen_deficit * (one(T) - T(fastfrac)) *
+                        (one(T) - T(atmfrac)) * shift_slow[layer, cell] * limitation,
+                    )
+                    slow_immobilization = min(slow_immobilization, available)
+                    if slow_immobilization > zero(M)
+                        ammonium_share = ammonium[layer, cell] / available
+                        ammonium[layer, cell] -= slow_immobilization * ammonium_share
+                        nitrate[layer, cell] -= slow_immobilization * (one(M) - ammonium_share)
+                        slow_nitrogen[layer, cell] += slow_immobilization
+                        immobilization[layer, cell] += slow_immobilization
+                    end
+                end
+            end
+        end
+        ammonium[layer, cell] = max(zero(M), ammonium[layer, cell])
+        nitrate[layer, cell] = max(zero(M), nitrate[layer, cell])
+    end
+end
 
 @kernel inbounds = true function nitrify_kernel!(
-                                 soil_ph::AbstractArray{T},
-                                 soil_NH4::AbstractArray{M},           
-                                 soil_NO3::AbstractArray{M},
-                                 soil_swc::AbstractArray{M},
-                                 soil_wsats::AbstractArray{M},
-                                 soil_temp::AbstractArray{M},
-                                 kernel_params_nit
+    soil_ph::AbstractArray{T},
+    ammonium::AbstractArray{M},
+    nitrate::AbstractArray{M},
+    relative_water::AbstractArray{M},
+    holding_storage::AbstractArray{M},
+    wilting_storage::AbstractArray{M},
+    wilting_ice_fraction::AbstractArray{M},
+    free_water::AbstractArray{M},
+    saturation_storage::AbstractArray{M},
+    soil_temperature::AbstractArray{M},
+    nitrification::AbstractArray{M},
+    n2o_nitrification::AbstractArray{M},
+    fixed_parameters,
 ) where {T <: AbstractFloat, M <: AbstractFloat}
-    
     cell = @index(Global)
+    kernel_params = kernel_value(fixed_parameters)
+    @unpack lpjmlparams, soil_layers = kernel_params
+    @unpack k_max, k_2, nitrification_a, nitrification_b,
+            nitrification_c, nitrification_d = lpjmlparams
 
-    @unpack lpjmlparams, soil_layers, a_nit, b_nit, c_nit, d_nit = kernel_params_nit
-    @unpack k_max, k_2 = lpjmlparams
-
-    # Potential nitrification rate is shaped by water-filled pore space and temperature response.
-    for l in 1:soil_layers
-
-        x = soil_swc[l, cell] / max(soil_wsats[l, cell], T(1e-8))
-        n_nit = a_nit - b_nit
-        m_nit = a_nit - c_nit
-        z_nit = d_nit * (b_nit - a_nit) / (a_nit - c_nit)
-        base1 = (x - b_nit) / n_nit
-        base2 = (x - c_nit) / m_nit
-        if base1 <= zero(T) || base2 <= zero(T)
-            fac_wfps = zero(T)
-        else
-            fac_wfps = base1^(z_nit) * base2^(d_nit)
-            if !isfinite(fac_wfps) || fac_wfps < zero(T)
-                fac_wfps = zero(T)
-            end
-        end
-        fac_temp = exp(-(soil_temp[l, cell] - T(18.79))^2 / T(2*5.26*5.26))
-        fac_ph = T(0.56) + atan(T(π) * T(0.45) * (soil_ph[cell] - T(5.0))) / T(π)
-
-        F_NO3 = k_max * soil_NH4[l, cell] * fac_temp * fac_wfps * fac_ph
-        if F_NO3 > soil_NH4[l, cell]
-            F_NO3 = soil_NH4[l, cell]
-        end
-        # F_N2O = k_2 * F_NO3
-        soil_NO3[l, cell] += F_NO3 * (1 - k_2)
-        soil_NH4[l, cell] -= F_NO3
+    for layer in 1:soil_layers
+        nitrification[layer, cell] = zero(M)
+        n2o_nitrification[layer, cell] = zero(M)
+        water_filled_pore_space = compute_water_filled_pore_space(
+            relative_water[layer, cell], holding_storage[layer, cell],
+            wilting_storage[layer, cell], wilting_ice_fraction[layer, cell],
+            free_water[layer, cell], saturation_storage[layer, cell],
+        )
+        n_nit = M(nitrification_a - nitrification_b)
+        m_nit = M(nitrification_a - nitrification_c)
+        z_nit = M(nitrification_d) * M(nitrification_b - nitrification_a) /
+            M(nitrification_a - nitrification_c)
+        moisture_factor = compute_nitrification_moisture_response(
+            water_filled_pore_space, M(nitrification_b), M(nitrification_c),
+            M(nitrification_d), n_nit, m_nit, z_nit,
+        )
+        temperature_factor = compute_nitrification_temperature_response(
+            soil_temperature[layer, cell],
+        )
+        ph_factor = compute_nitrification_ph_response(M(soil_ph[cell]))
+        gross_nitrification = clamp(
+            T(k_max) * ammonium[layer, cell] * temperature_factor *
+            moisture_factor * ph_factor,
+            zero(M), ammonium[layer, cell],
+        )
+        n2o_loss = T(k_2) * gross_nitrification
+        ammonium[layer, cell] -= gross_nitrification
+        nitrate[layer, cell] += gross_nitrification - n2o_loss
+        nitrification[layer, cell] = gross_nitrification
+        n2o_nitrification[layer, cell] = n2o_loss
     end
 end
-
 
 @kernel inbounds = true function denitrify_kernel!(
-                                 soil_fastc::AbstractArray{M},
-                                 soil_slowc::AbstractArray{M},
-                                 soil_w::AbstractArray{M},
-                                 soil_whcs::AbstractArray{M},
-                                 soil_wpwps::AbstractArray{M},
-                                 soil_w_fw::AbstractArray{M},
-                                 soil_wsats::AbstractArray{M},
-                                 soil_temp::AbstractArray{M},
-                                 soil_NO3::AbstractArray{M},
-                                 kernel_params_denit
-) where {M <: AbstractFloat}
-
+    _soil_ph::AbstractArray{T},
+    fast_carbon::AbstractArray{M},
+    slow_carbon::AbstractArray{M},
+    relative_water::AbstractArray{M},
+    holding_storage::AbstractArray{M},
+    wilting_storage::AbstractArray{M},
+    wilting_ice_fraction::AbstractArray{M},
+    free_water::AbstractArray{M},
+    saturation_storage::AbstractArray{M},
+    soil_temperature::AbstractArray{M},
+    nitrate::AbstractArray{M},
+    denitrification::AbstractArray{M},
+    n2o_denitrification::AbstractArray{M},
+    n2_denitrification::AbstractArray{M},
+    fixed_parameters,
+) where {T <: AbstractFloat, M <: AbstractFloat}
     cell = @index(Global)
-
-    @unpack lpjmlparams, soil_layers = kernel_params_denit
+    kernel_params = kernel_value(fixed_parameters)
+    @unpack lpjmlparams, soil_layers = kernel_params
     @unpack CDN, n2o_denit_frac = lpjmlparams
 
-    for l in 1:soil_layers
-        Corg = max(zero(M), soil_fastc[l, cell] + soil_slowc[l, cell])
-        temp = soil_temp[l, cell]
-
-        FT = if temp > zero(M)
-            M(0.0326) + M(0.00351) * temp^M(1.652) - (temp / M(41.748))^M(7.19)
-        elseif temp > M(45.9)
-            zero(M)
-        else
-            M(0.0326)
-        end
-        denit_t = (soil_wpwps[l, cell] + soil_w[l, cell] * soil_whcs[l, cell] + soil_w_fw[l, cell]) / max(soil_wsats[l, cell], M(1e-8))
-
-        N_denit = zero(M)
-        if temp <= M(45.9)
-            FW = min(one(M), M(6.664096e-10) * exp(M(21.12912) * denit_t))
-            TCDF = one(M) - exp(-CDN * FT * Corg)
-            N_denit = FW * TCDF * soil_NO3[l, cell]
-        end
-        N_denit = min(max(N_denit, zero(M)), soil_NO3[l, cell])
-        soil_NO3[l, cell] -= N_denit
-
-        # Keep this split for parity with LPJmL even if not emitted to outputs here.
-        N2O_denit = n2o_denit_frac * N_denit
-        _N2_denit = N_denit - N2O_denit
+    for layer in 1:soil_layers
+        denitrification[layer, cell] = zero(M)
+        n2o_denitrification[layer, cell] = zero(M)
+        n2_denitrification[layer, cell] = zero(M)
+        temperature = soil_temperature[layer, cell]
+        organic_carbon = max(zero(M), fast_carbon[layer, cell] + slow_carbon[layer, cell])
+        temperature_factor = compute_denitrification_temperature_response(temperature)
+        water_filled_pore_space = compute_water_filled_pore_space(
+            relative_water[layer, cell], holding_storage[layer, cell],
+            wilting_storage[layer, cell], wilting_ice_fraction[layer, cell],
+            free_water[layer, cell], saturation_storage[layer, cell],
+        )
+        moisture_factor = compute_denitrification_moisture_response(
+            water_filled_pore_space,
+        )
+        carbon_factor = max(
+            zero(M), one(M) - exp(-M(CDN) * temperature_factor * organic_carbon),
+        )
+        gross_denitrification = clamp(
+            moisture_factor * carbon_factor * nitrate[layer, cell],
+            zero(M), nitrate[layer, cell],
+        )
+        n2o_loss = M(n2o_denit_frac) * gross_denitrification
+        n2_loss = gross_denitrification - n2o_loss
+        nitrate[layer, cell] -= gross_denitrification
+        denitrification[layer, cell] = gross_denitrification
+        n2o_denitrification[layer, cell] = n2o_loss
+        n2_denitrification[layer, cell] = n2_loss
     end
 end
 
-
 @kernel inbounds = true function volatilization_kernel!(
-                                     soil_NH4::AbstractArray{M},
-                                     soil_ph::AbstractArray{T},
-                                     soil_temp::AbstractArray{M},
-                                     soil_layer_depth::AbstractArray{T},
-                                     lpjmlparams::LPJmLParams
+    soil_ph::AbstractArray{T},
+    ammonium::AbstractArray{M},
+    air_temperature::AbstractArray{M},
+    wind_speed::AbstractArray{M},
+    layer_depth::AbstractArray{T},
+    volatilization::AbstractArray{M},
+    fixed_parameters,
 ) where {T <: AbstractFloat, M <: AbstractFloat}
-
     cell = @index(Global)
-    
-    @unpack volatil_wind, volatil_length = lpjmlparams
-
-    temp = soil_temp[1, cell]
-    pH = soil_ph[cell]
-    NH4 = max(zero(M), soil_NH4[1, cell])
-
-    # LPJmL volatilization.c (Montes 2009 parameterization)
-    k_a = M(10)^(M(0.05) - M(2788.0) / (temp + M(273.15)))
-    f_nh3 = one(M) / (one(M) + M(10)^(-pH) / max(k_a, M(1e-12)))
-    nh3_solution = f_nh3 * NH4 / max(soil_layer_depth[1], T(1e-8)) * M(1000.0)
-    k_h = M(0.2138) / (temp + M(273.15)) * M(10)^(M(6.123) - M(1825.0) / (temp + M(273.15)))
-    nh3_gas = k_h * nh3_solution
-    h_m = M(0.000612) * volatil_wind^M(0.8) * (temp + M(273.15))^M(0.382) * volatil_length^M(-0.2)
-    vol_flux = M(86400.0) * h_m * nh3_gas
-    vol_flux = min(max(vol_flux, zero(M)), soil_NH4[1, cell])
-    soil_NH4[1, cell] -= vol_flux
+    lpjmlparams = kernel_value(fixed_parameters)
+    @unpack volatil_length = lpjmlparams
+    flux = compute_ammonia_volatilization(
+        ammonium[1, cell], M(soil_ph[cell]), air_temperature[cell], wind_speed[cell],
+        M(layer_depth[1]), M(volatil_length),
+    )
+    ammonium[1, cell] -= flux
+    volatilization[cell] = flux
 end

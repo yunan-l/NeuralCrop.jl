@@ -1,95 +1,101 @@
-<!-- Title -->
-<h1 align="center">
-NeuralCrop.jl
-</h1>
+# NeuralCrop.jl
 
-<!-- description -->
-<p align="center">
-  <strong> 🧑‍🌾 💧 ☀️ 🌾 🚀 Fast and flexible Julia framework for hybrid crop modelling across scales. </strong>
-</p>
+[![NeuralCrop](https://github.com/yunan-l/NeuralCrop.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/yunan-l/NeuralCrop.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![DOI](https://img.shields.io/badge/DOI-10.48550%2FarXiv.2512.20177-blue)](https://doi.org/10.48550/arXiv.2512.20177)
+[![License: EUPL-1.2](https://img.shields.io/badge/license-EUPL--1.2-blue)](LICENSE)
 
-<p align="center">
-  <a href="https://github.com/yunan-l/NeuralCrop.jl/actions">
-    <img src="https://github.com/yunan-l/NeuralCrop.jl/actions/workflows/CI.yml/badge.svg" alt="Build Status">
-  </a>
-  <a href="https://yunan-l.github.io/NeuralCrop.jl/">
-    <img src="https://img.shields.io/badge/documentation-latest_release-orange" alt="Docs Status">
-  </a>
-  <a href="https://doi.org/10.48550/arXiv.2512.20177">
-    <img src="https://img.shields.io/badge/DOI-10.48550/arXiv.2512.20177-blue.svg" alt="DOI">
-  </a>
-</p>
+NeuralCrop.jl is a differentiable hybrid crop-modelling framework that combines
+mechanistic crop and soil processes with trainable neural components. It can
+be trained with observational data and supports simulations ranging from
+individual sites to regional grids on CPUs and GPUs.
 
-NeuralCrop is a global gridded crop model (GGCM) that combines the strengths of the state-of-the-art GGCM [LPJmL](https://gmd.copernicus.org/articles/11/2789/2018/) with machine learning approaches. By implementing process-based components in a differentiable form for seamless integration with machine learning methods, NeuralCrop enables end-to-end 'online training', with machine learning components optimized in tandem with the physical model dynamics. NeuralCrop is a flexible Julia framework supporting both purely process-based and hybrid simulations across CPUs and GPUs. More details are available in our preprint paper: [https://arxiv.org/abs/2512.20177](https://arxiv.org/abs/2512.20177)
+The repository contains the Julia implementation used in the NeuralCrop
+manuscript. The `Default` configuration contains no neural-network component.
+The `Hybrid` configuration introduces trainable processes. Phenology,
+management, soil water, carbon, nitrogen, and energy processes remain explicit.
 
-> [!NOTE]
-> The [documentation](https://yunan-l.github.io/NeuralCrop.jl/) is generated with assistance from Codex 🤖.
+## Main capabilities
 
+- Differentiable seasonal crop simulations using Enzyme.jl.
+- CPU and GPU execution through KernelAbstractions.jl.
+- Explicit crop phenology, management, soil hydrology, carbon and nitrogen
+  cycling, and mass-balance diagnostics.
+- Trainable process representations for hybrid simulation.
+- Site-scale and gridded simulation workflows.
+
+## Related paper
+
+Lin, Y., Bathiany, S., Badri, M., Gelbrecht, M., Hess, P., Groenke, B.,
+Heinke, J., Müller, C., and Boers, N. (2025).
+[NeuralCrop: Combining physics and machine learning for improved crop yield projections](https://doi.org/10.48550/arXiv.2512.20177).
 
 ## Installation
 
-NeuralCrop is not yet registered as a Julia package. You can install it directly from the repository via the package manager (type `]` in your Julia REPL):
-
-```julia
-pkg> add https://github.com/yunan-l/NeuralCrop.jl.git
-```
-
-or clone the repository to your machine: 
+NeuralCrop.jl currently targets Julia 1.10. Clone the repository and instantiate
+its project environment:
 
 ```bash
 git clone https://github.com/yunan-l/NeuralCrop.jl.git
 cd NeuralCrop.jl
+julia --project=. -e 'import Pkg; Pkg.instantiate()'
 ```
 
-Then, in the Julia REPL, activate the project and instantiate the dependencies:
+An NVIDIA GPU and a working
+[CUDA.jl](https://github.com/JuliaGPU/CUDA.jl) installation are required only
+for GPU execution and GPU-specific tests.
 
-```julia
-pkg> activate .
-pkg> instantiate
+## Examples
+
+The `examples/` directory provides initial conditions, daily climate forcing,
+and a wheat simulation notebook.
+
+Regional entry points are available under `scripts/`. Large forcing data and
+trained checkpoints are not stored directly in this repository.
+
+## Testing
+
+Run the CPU test suite with:
+
+```bash
+julia --project=. test/runtests.jl
 ```
 
-This will resolve compatible package versions for your Julia installation. We recommend running NeuralCrop on Julia version 1.10.x.
+Run the Enzyme differentiability tests separately with:
 
+```bash
+julia --project=test -e 'using Pkg; Pkg.develop(Pkg.PackageSpec(path=".")); Pkg.instantiate()'
+julia --project=test test/runtests_ad.jl
+```
 
-## Example use
+GPU tests require a functional CUDA device:
 
-<!-- NeuralCrop does not provide the climate and management data required to drive the model, as these datasets originate from third-party sources. The necessary input data can be obtained from the [ISIMIP data repository](https://data.isimip.org/) (Inter-Sectoral Impact Model Intercomparison Project), and please cite the ISIMIP data appropriately when using it. -->
+```bash
+julia --project=. test/runtests_gpu.jl
+```
 
-For a quick start, we provide a simplified demo in the examples/ directory, including 20-year forcing data (2000-2019) covering 10 grid cells. If a GPU is available and [CUDA.jl](https://github.com/JuliaGPU/CUDA.jl) is installed, we can accelerate the simulation on a GPU 🚀.
+## Development status
 
+This is research software under active development. Interfaces and
+configurations may change while the manuscript is under review. For exact
+reproducibility, use a tagged release or a cited commit rather than the moving
+`main` branch.
 
-## Usage
+## Contributing
 
-NeuralCrop.jl is released under the [European Union Public Licence v1.2](https://eupl.eu/1.2/en). You are encouraged to copy, modify, and build upon our code to advance your research. 
-
-
-## Performance benchmarks
-
-We compare the inference time between GPU-accelerated NeuralCrop and CPU-based LPJmL by running them on a $0.5^\circ \times 0.5^\circ$ spatial resolution with daily time steps over a 20-year simulation period (7300 days) at different grid cells. NeuralCrop achieves approximately 100x speedup 🚀🚀🚀.
-
-<p align="left">
-  <img src="docs/src/assets/comparison_time.png" width="450">
-</p>
-
+Questions, issue reports, and contributions are welcome through the
+[GitHub issue tracker](https://github.com/yunan-l/NeuralCrop.jl/issues).
 
 ## Acknowledgements
 
-NeuralCrop.jl is a research project developed with the support by the [Earth System Modeling group](https://www.asg.ed.tum.de/esm/home/) at the Technical University of Munich (TUM) and [FutureLab on Artificial Intelligence](https://www.pik-potsdam.de/en/institute/departments/complexity-science/research/artificial-intelligence) at the Potsdam Institute for Climate Impact Research (PIK). The author acknowledges funding from the program of the China Scholarship Council (grant agreement no.202303250017) and the Horizon Europe ClimTip project (grant agreement no.101137601).
+NeuralCrop.jl was developed with support from the
+[Earth System Modeling group](https://www.asg.ed.tum.de/esm/home/) at the
+Technical University of Munich and the
+[FutureLab on Artificial Intelligence](https://www.pik-potsdam.de/en/institute/departments/complexity-science/research/artificial-intelligence)
+at the Potsdam Institute for Climate Impact Research. This work received
+funding from the China Scholarship Council (grant agreement 202303250017) and
+the Horizon Europe ClimTip project (grant agreement 101137601).
 
+## License
 
-## Citation
-
-If you use NeuralCrop.jl in research or other non-commercial activities 🏄, please mention NeuralCrop.jl and cite our paper:
-
-> Lin, Yunan, et al. "NeuralCrop: Combining physics and machine learning for improved crop yield projections." arXiv preprint arXiv:2512.20177 (2025).
-
-The bibtex entry for the paper is:
-
-```bibtex
-@article{lin2025neuralcrop,
-  title={NeuralCrop: Combining physics and machine learning for improved crop yield projections},
-  author={Lin, Yunan and Bathiany, Sebastian and Badri, Maha and Gelbrecht, Maximilian and Hess, Philipp and Groenke, Brian and Heinke, Jens and M{\"u}ller, Christoph and Boers, Niklas},
-  journal={arXiv preprint arXiv:2512.20177},
-  year={2025}
-}
-```
+NeuralCrop.jl is released under the
+[European Union Public Licence v1.2](https://eupl.eu/1.2/en).

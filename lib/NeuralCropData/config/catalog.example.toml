@@ -1,0 +1,81 @@
+[cfts]
+# LPJmL's 12-crop CFT order. File-specific rainfed/irrigated band positions are
+# declared on each management dataset below.
+ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+names = [
+    "temperate cereals", "rice", "maize", "tropical cereals", "pulses",
+    "temperate roots", "tropical roots", "oil crops sunflower",
+    "oil crops soybean", "oil crops groundnut", "oil crops rapeseed", "sugarcane",
+]
+
+[datasets.grid]
+path = "/path/to/grid.nc"
+variable = "cellid"
+
+[datasets.soilcode]
+path = "/path/to/soil_30arcmin_13_types.nc"
+variable = "soilcode"
+
+[datasets.soilph]
+path = "/path/to/soil_pH30arcmin.nc"
+variable = "soilph"
+
+[datasets.temp]
+path = "/path/to/tas_gswp3-w5e5_obsclim_1901-2019.nc"
+variable = "temp"
+
+[datasets.prec]
+path = "/path/to/pr_gswp3-w5e5_obsclim_1901-2019.nc"
+variable = "prec"
+
+[datasets.lwnet]
+path = "/path/to/lwnet_gswp3-w5e5_obsclim_1901-2019.nc"
+variable = "lwnet"
+
+[datasets.swdown]
+path = "/path/to/rsds_gswp3-w5e5_obsclim_1901-2019.nc"
+variable = "swdown"
+
+[datasets.co2]
+path = "/path/to/global_co2_ann_1700_2022.txt"
+variable = "co2"
+units = "ppm"
+
+[datasets.landuse]
+path = "/path/to/cft_landuse.nc"
+variable = "landfrac"
+units = "1"
+rainfed_bands = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+irrigated_bands = [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]
+
+[datasets.sowing_date]
+path = "/path/to/sowing_date.nc"
+variable = "sdate"
+units = "day of year"
+rainfed_bands = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+irrigated_bands = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+
+[datasets.phu]
+path = "/path/to/phu.nc"
+variable = "phusum"
+rainfed_bands = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+irrigated_bands = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+
+[datasets.fertilizer]
+path = "/path/to/fertilizer.nc"
+variable = "fertilizer"
+rainfed_bands = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+irrigated_bands = [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]
+
+[datasets.manure]
+path = "/path/to/manure.nc"
+variable = "manure"
+rainfed_bands = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+irrigated_bands = [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]
+
+[datasets.residue_fraction]
+path = "/path/to/residue_fraction.nc"
+variable = "residuefrac"
+units = "1"
+rainfed_bands = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+irrigated_bands = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]

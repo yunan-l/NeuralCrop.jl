@@ -1,0 +1,68 @@
+[paths]
+input_directory = "/absolute/path/input_data"
+hwsd_targets = "/absolute/path/input_data/soil/hwsd_canonical.nc"
+output_directory = "/absolute/path/output/global_cfts_gpu_allocation_validation"
+
+[climate]
+temperature_file = "tas_gswp3-w5e5_obsclim_1901-2019.nc"
+precipitation_file = "pr_gswp3-w5e5_obsclim_1901-2019.nc"
+longwave_file = "lwnet_gswp3-w5e5_obsclim_1901-2019.nc"
+shortwave_file = "rsds_gswp3-w5e5_obsclim_1901-2019.nc"
+co2_file = "global_co2_ann_1700_2022.txt"
+
+[management]
+mode = "fixed"
+fixed_year = 2015
+fertilizer = "yes"
+manure = true
+with_tillage = true
+
+[cfts]
+cft_ids = "all"
+water_systems = ["rainfed", "irrigated"]
+
+# Calibration phase: every CFT × water-system batch starts from HWSD and runs
+# a fixed 600-year target-constrained calibration. The runner enforces these
+# values and writes batches/<name>/calibration/warmup_soil_pool_allocation.nc.
+[run]
+resume_completed_batches = true
+backend = "cuda"
+device_id = 0
+memory_safety_factor = 1.2
+simulation_start_year = 2015
+simulation_end_year = 2016
+warmup_climate_start_year = 1901
+warmup_climate_end_year = 1930
+warmup_target_constrained = true
+warmup_minimum_years = 600
+warmup_maximum_years = 600
+warmup_consecutive_years = 3
+warmup_relative_tolerance = 0.01
+warmup_pool_fraction_tolerance = 0.01
+warmup_required_converged_fraction = 1.0
+warmup_cache_climate = false
+require_warmup_convergence = false
+diagnostic_cells = 10
+cell_limit = 0
+
+# Free settling phase: each batch rebuilds from its own allocation, then runs
+# five 30-year climate cycles without annual target correction. Production uses
+# the final free state, not HWSD or the constrained-calibration state. This is
+# an explicitly non-equilibrium production test when its drift rule is unmet.
+[free_warmup]
+warmup_minimum_years = 150
+warmup_maximum_years = 150
+warmup_consecutive_years = 3
+warmup_relative_tolerance = 0.01
+warmup_pool_fraction_tolerance = 0.01
+warmup_required_converged_fraction = 0.98
+warmup_cache_climate = false
+require_warmup_convergence = false
+
+[validation]
+maximum_water_residual = 0.01
+maximum_carbon_relative_residual = 0.0001
+maximum_nitrogen_relative_residual = 0.0001
+maximum_thermal_relative_residual = 0.0001
+maximum_percolation_energy_residual = 5.0
+maximum_percolation_energy_relative_residual = 5.0e-6
