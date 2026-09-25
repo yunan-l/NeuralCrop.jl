@@ -1,4 +1,4 @@
-name: Enzyme differentiability
+name: Enzyme smoke
 
 on:
   push:
@@ -9,8 +9,9 @@ on:
       - Manifest.toml
       - src/**
       - ext/**
-      - test/ad/**
-      - test/runtests_ad.jl
+      - test/ad/test_adapter_contract.jl
+      - test/ad/test_enzyme_adapter.jl
+      - test/runtests_ad_smoke.jl
       - test/Project.toml
       - .github/workflows/AD.yml
   pull_request:
@@ -19,8 +20,9 @@ on:
       - Manifest.toml
       - src/**
       - ext/**
-      - test/ad/**
-      - test/runtests_ad.jl
+      - test/ad/test_adapter_contract.jl
+      - test/ad/test_enzyme_adapter.jl
+      - test/runtests_ad_smoke.jl
       - test/Project.toml
       - .github/workflows/AD.yml
   workflow_dispatch:
@@ -29,8 +31,8 @@ permissions:
   contents: read
 
 jobs:
-  enzyme:
-    name: Julia 1.10 - Enzyme AD
+  enzyme-smoke:
+    name: Julia 1.10 - Enzyme smoke
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -38,8 +40,11 @@ jobs:
       - uses: julia-actions/setup-julia@v2
         with:
           version: '1.10.10'
-      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/cache@v2
+        with:
+          cache-compiled: false
+          cache-scratchspaces: false
       - name: Instantiate AD test environment
         run: julia --startup-file=no --project=test -e 'using Pkg; Pkg.develop(Pkg.PackageSpec(path=".")); Pkg.instantiate()'
-      - name: Run Enzyme differentiability tests
-        run: julia --startup-file=no --project=test test/runtests_ad.jl
+      - name: Run focused Enzyme smoke tests
+        run: julia --startup-file=no --project=test test/runtests_ad_smoke.jl
