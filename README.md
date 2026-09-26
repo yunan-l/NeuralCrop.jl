@@ -27,7 +27,7 @@ management, soil water, carbon, nitrogen, and energy processes remain explicit.
 
 Lin, Y., Bathiany, S., Badri, M., Gelbrecht, M., Hess, P., Groenke, B.,
 Heinke, J., Müller, C., and Boers, N. (2025).
-[NeuralCrop: Combining physics and machine learning for improved crop yield projections](https://doi.org/10.48550/arXiv.2512.20177).
+[NeuralCrop: Combining physics and machine learning for improved crop yield projections](https://doi.org/10.48550/arXiv.2512.20177). arXiv preprint.
 
 ## Installation
 
