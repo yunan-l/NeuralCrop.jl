@@ -73,13 +73,6 @@ GPU tests require a functional CUDA device:
 julia --project=. test/runtests_gpu.jl
 ```
 
-## Development status
-
-This is research software under active development. Interfaces and
-configurations may change while the manuscript is under review. For exact
-reproducibility, use a tagged release or a cited commit rather than the moving
-`main` branch.
-
 ## Contributing
 
 Questions, issue reports, and contributions are welcome through the
