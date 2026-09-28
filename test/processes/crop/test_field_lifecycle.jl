@@ -124,10 +124,12 @@ end
     @test :workspace ∉ fieldnames(typeof(output))
     @test propertynames(output.annual) == (
         :yield, :harvest_date,
-        :season_gpp, :season_lai_days, :season_length,
+        :season_gpp, :season_ecosystem_respiration,
+        :season_lai_days, :season_length,
         :season_water_deficit, :season_evapotranspiration,
         :harvest_aboveground_carbon,
-        :active_gpp, :active_lai_days, :active_length,
+        :active_gpp, :active_ecosystem_respiration,
+        :active_lai_days, :active_length,
         :active_water_deficit, :active_evapotranspiration,
     )
     @test isempty(fieldnames(typeof(crop.workspace)))

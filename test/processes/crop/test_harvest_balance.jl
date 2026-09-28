@@ -57,6 +57,9 @@ end
     crop.events.sowing .= Int32(1)
     crop.state.phenology.is_growing .= Int32(1)
     crop.fluxes.carbon.gross_assimilation .= 4.0f0
+    crop.fluxes.carbon.respiration .= 1.0f0
+    crop.fluxes.carbon.leaf_respiration .= 0.2f0
+    soil.carbon.heterotrophic_respiration .= 0.3f0
     crop.auxiliary.canopy.actual_lai .= 2.0f0
     crop.auxiliary.stress.water_deficit .= 3.0f0
     crop.fluxes.water.interception .= 0.5f0
@@ -69,6 +72,7 @@ end
     NeuralCrop.accumulate_season_process_diagnostics!(output, state, state)
 
     @test output.annual.active_gpp[1] == 8.0f0
+    @test output.annual.active_ecosystem_respiration[1] == 3.0f0
     @test output.annual.active_lai_days[1] == 4.0f0
     @test output.annual.active_length[1] == 2.0f0
     @test output.annual.active_water_deficit[1] == 6.0f0
@@ -84,6 +88,7 @@ end
 
     @test output.crop.yield[1, 1] == 5.0f0
     @test output.crop.season_gpp[1, 1] == 8.0f0
+    @test output.crop.season_ecosystem_respiration[1, 1] == 3.0f0
     @test output.crop.season_lai_days[1, 1] == 4.0f0
     @test output.crop.season_length[1, 1] == 2.0f0
     @test output.crop.season_water_deficit[1, 1] == 6.0f0

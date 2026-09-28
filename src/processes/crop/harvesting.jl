@@ -24,12 +24,14 @@ function harvest_crop!(crop,
         crop_fluxes(crop).carbon.harvest_export,
         output.annual.yield,
         output.annual.season_gpp,
+        output.annual.season_ecosystem_respiration,
         output.annual.season_lai_days,
         output.annual.season_length,
         output.annual.season_water_deficit,
         output.annual.season_evapotranspiration,
         output.annual.harvest_aboveground_carbon,
         output.annual.active_gpp,
+        output.annual.active_ecosystem_respiration,
         output.annual.active_lai_days,
         output.annual.active_length,
         output.annual.active_water_deficit,
@@ -50,6 +52,7 @@ function harvest_crop!(crop,
         residue_frac,
         output.crop.yield,
         output.crop.season_gpp,
+        output.crop.season_ecosystem_respiration,
         output.crop.season_lai_days,
         output.crop.season_length,
         output.crop.season_water_deficit,
@@ -94,7 +97,8 @@ function harvest_crop!(crop,
         )
         output.crop.yield = _append_output_row(output.crop.yield, annual_yield)
         for field in (
-            :season_gpp, :season_lai_days, :season_length,
+            :season_gpp, :season_ecosystem_respiration,
+            :season_lai_days, :season_length,
             :season_water_deficit, :season_evapotranspiration,
             :harvest_aboveground_carbon,
         )
@@ -110,6 +114,7 @@ function harvest_crop!(crop,
             output.annual.yield,
             output.annual.harvest_date,
             output.annual.season_gpp,
+            output.annual.season_ecosystem_respiration,
             output.annual.season_lai_days,
             output.annual.season_length,
             output.annual.season_water_deficit,
@@ -311,12 +316,14 @@ end
         carbon_harvest_export::AbstractVector{T},
         annual_yield::AbstractVector{T},
         annual_season_gpp::AbstractVector{T},
+        annual_season_ecosystem_respiration::AbstractVector{T},
         annual_season_lai_days::AbstractVector{T},
         annual_season_length::AbstractVector{T},
         annual_season_water_deficit::AbstractVector{T},
         annual_season_evapotranspiration::AbstractVector{T},
         annual_harvest_aboveground_carbon::AbstractVector{T},
         active_gpp::AbstractVector{T},
+        active_ecosystem_respiration::AbstractVector{T},
         active_lai_days::AbstractVector{T},
         active_length::AbstractVector{T},
         active_water_deficit::AbstractVector{T},
@@ -337,6 +344,7 @@ end
         residue_fraction::AbstractVector{T},
         output_yield::AbstractMatrix{T},
         output_season_gpp::AbstractMatrix{T},
+        output_season_ecosystem_respiration::AbstractMatrix{T},
         output_season_lai_days::AbstractMatrix{T},
         output_season_length::AbstractMatrix{T},
         output_season_water_deficit::AbstractMatrix{T},
@@ -361,6 +369,8 @@ end
         crop_yield[cell] = storage_carbon[cell]
         annual_yield[cell] += crop_yield[cell]
         annual_season_gpp[cell] += active_gpp[cell]
+        annual_season_ecosystem_respiration[cell] +=
+            active_ecosystem_respiration[cell]
         annual_season_lai_days[cell] += active_lai_days[cell]
         annual_season_length[cell] += active_length[cell]
         annual_season_water_deficit[cell] += active_water_deficit[cell]
@@ -368,6 +378,7 @@ end
         annual_harvest_aboveground_carbon[cell] +=
             storage_carbon[cell] + aboveground_carbon
         active_gpp[cell] = zero(T)
+        active_ecosystem_respiration[cell] = zero(T)
         active_lai_days[cell] = zero(T)
         active_length[cell] = zero(T)
         active_water_deficit[cell] = zero(T)
@@ -397,6 +408,9 @@ end
             (output_yield[annual_output_row, cell] = emitted_yield)
         size(output_season_gpp, 1) != 0 &&
             (output_season_gpp[annual_output_row, cell] = annual_season_gpp[cell])
+        size(output_season_ecosystem_respiration, 1) != 0 &&
+            (output_season_ecosystem_respiration[annual_output_row, cell] =
+                annual_season_ecosystem_respiration[cell])
         size(output_season_lai_days, 1) != 0 &&
             (output_season_lai_days[annual_output_row, cell] = annual_season_lai_days[cell])
         size(output_season_length, 1) != 0 &&
@@ -414,6 +428,7 @@ end
                 emitted_yield != zero(T) ? one(S) : zero(S))
         annual_yield[cell] = zero(T)
         annual_season_gpp[cell] = zero(T)
+        annual_season_ecosystem_respiration[cell] = zero(T)
         annual_season_lai_days[cell] = zero(T)
         annual_season_length[cell] = zero(T)
         annual_season_water_deficit[cell] = zero(T)
@@ -427,6 +442,7 @@ end
     annual_yield::AbstractVector{T},
     harvest_date::AbstractVector{S},
     annual_season_gpp::AbstractVector{T},
+    annual_season_ecosystem_respiration::AbstractVector{T},
     annual_season_lai_days::AbstractVector{T},
     annual_season_length::AbstractVector{T},
     annual_season_water_deficit::AbstractVector{T},
@@ -437,6 +453,7 @@ end
     annual_yield[cell] = zero(T)
     harvest_date[cell] = zero(S)
     annual_season_gpp[cell] = zero(T)
+    annual_season_ecosystem_respiration[cell] = zero(T)
     annual_season_lai_days[cell] = zero(T)
     annual_season_length[cell] = zero(T)
     annual_season_water_deficit[cell] = zero(T)
