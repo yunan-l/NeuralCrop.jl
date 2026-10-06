@@ -778,7 +778,8 @@ function _neural_continuous_transition!(
     layer_depth,
     irrigation::Bool,
     nitrogen_limit_vcmax::Bool,
-    pathway::Union{Val{:C3}, Val{:C4}},
+    pathway::Union{Val{:C3}, Val{:C4}};
+    photosynthesis_input_hook = nothing,
 ) where {T <: AbstractFloat}
     # Root distribution is static and is already initialized from this CFT in
     # the fixed-event state template. Keeping its kernel launch inside the
@@ -880,7 +881,23 @@ function _neural_continuous_transition!(
         cft, pet, state, weather.temp; photoparams = photo_params,
     )
 
-    if layout.components.gpp
+    daily_neural_controls = layout.components.lambda_vcmax_once_daily
+    daily_neural_controls && nitrogen_limit_vcmax && error(
+        "once-daily neural controls require nitrogen_limit_vcmax=false",
+    )
+    if daily_neural_controls
+        isnothing(photosynthesis_input_hook) || photosynthesis_input_hook(state)
+        NeuralCrop.neural_final_photosynthesis_controls!(
+            theta, layout, state, pet.daylength, weather.temp, layer_depth,
+        )
+        NeuralCrop.photosynthesis!(
+            pathway, cft, state, NeuralCrop.crop_canopy_auxiliary(state).apar,
+            pet.daylength, weather.temp, current_co2;
+            comp_vcmax = false,
+            lpjmlparams = global_params,
+            photoparams = photo_params,
+        )
+    elseif layout.components.gpp
         NeuralCrop.photosynthesis!(
             pathway,
             cft,
@@ -941,7 +958,7 @@ function _neural_continuous_transition!(
             lpjmlparams = global_params,
         )
     end
-    if !layout.components.gpp || layout.components.gpp_residual
+    if (!layout.components.gpp || layout.components.gpp_residual) && !daily_neural_controls
         NeuralCrop.solve_lambda!(
             pathway,
             cft,
@@ -967,7 +984,7 @@ function _neural_continuous_transition!(
             state, cft, weather.temp; lpjmlparams = global_params,
         )
     end
-    if layout.components.lambda || layout.components.vcmax
+    if (layout.components.lambda || layout.components.vcmax) && !daily_neural_controls
         nitrogen_limit_vcmax && error(
             "final lambda/Vcmax corrections require nitrogen_limit_vcmax=false",
         )
@@ -1000,7 +1017,7 @@ function _neural_continuous_transition!(
                 photo_params,
             )
         end
-    else
+    elseif !daily_neural_controls
         NeuralCrop.photosynthesis!(
             pathway,
             cft,

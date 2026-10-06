@@ -20,8 +20,8 @@ Select the retained NeuralCrop components. A disabled component falls back to it
 ordinary NeuralCrop process implementation, which is used for controlled
 ablation runs. GPP can be predicted directly or used as a bounded
 multiplicative correction to process GPP. The older lambda and Vcmax networks
-can alternatively correct the final daily process controls before GPP is
-recomputed. Carbon allocation, soil decomposition, snowmelt, and soil
+can alternatively correct or directly predict the final daily controls before
+GPP is recomputed. Carbon allocation, soil decomposition, snowmelt, and soil
 evaporation remain disabled in the current experiments.
 """
 Base.@kwdef struct NeuralComponents
@@ -29,6 +29,8 @@ Base.@kwdef struct NeuralComponents
     gpp_residual::Bool = false
     lambda::Bool = false
     vcmax::Bool = false
+    lambda_vcmax_direct::Bool = false
+    lambda_vcmax_once_daily::Bool = false
     allocation::Bool = false
     decomposition::Bool = false
     respiration::Bool = true
@@ -46,7 +48,8 @@ limited to the variables described in the manuscript:
 
 * GPP: day length, correctly scaled APAR, fPAR, LAI, leaf nitrogen, air
   temperature, atmospheric CO2, and mean top-three-layer soil moisture;
-* lambda and Vcmax: final process controls corrected after the daily solver;
+* lambda and Vcmax: controls corrected or directly predicted after the daily solver,
+  or predicted once before photosynthesis and transpiration when `lambda_vcmax_once_daily` is enabled;
 * allocation: NPP, LAI, leaf nitrogen, soil moisture, and four carbon pools;
 * decomposition: temperature and moisture;
 * respiration: GPP, leaf respiration, temperature, and crop carbon pools;
@@ -82,6 +85,11 @@ function NeuralCropLayout(;
     components.gpp_residual && !components.gpp && throw(ArgumentError(
         "gpp_residual requires the GPP network to be enabled",
     ))
+    components.lambda_vcmax_direct && !(components.lambda || components.vcmax) &&
+        throw(ArgumentError("lambda_vcmax_direct requires a lambda or Vcmax network"))
+    components.lambda_vcmax_once_daily &&
+        !(components.lambda_vcmax_direct && components.lambda && components.vcmax && !components.gpp) &&
+        throw(ArgumentError("lambda_vcmax_once_daily requires both direct control networks and disables direct GPP"))
     first = 1
     gpp = MLPLayout{8, 64, 1}(first)
     first = _next_parameter(gpp)
@@ -246,8 +254,10 @@ function initialize_neural_parameters(
     else
         _initialize_mlp!(rng, theta, layout.gpp, (log(T(0.2) / T(0.8)),))
     end
-    _initialize_mlp!(rng, theta, layout.lambda, (zero(T),); zero_output_weights = true)
-    _initialize_mlp!(rng, theta, layout.vcmax, (zero(T),); zero_output_weights = true)
+    lambda_bias = layout.components.lambda_vcmax_direct ? log(T(0.7) / T(0.3)) : zero(T)
+    vcmax_bias = layout.components.lambda_vcmax_direct ? log(expm1(one(T))) : zero(T)
+    _initialize_mlp!(rng, theta, layout.lambda, (lambda_bias,); zero_output_weights = true)
+    _initialize_mlp!(rng, theta, layout.vcmax, (vcmax_bias,); zero_output_weights = true)
     _initialize_mlp!(rng, theta, layout.allocation,
         (log(T(0.3)), log(T(0.3)), log(T(0.2)), log(T(0.2))))
     _initialize_mlp!(rng, theta, layout.decomposition, (T(-1.4),))
@@ -301,7 +311,7 @@ end
     return T(50) * _logistic(_mlp_forward(theta, layout.gpp, inputs)[1])
 end
 
-"""Identity-initialized, bounded correction to the final process CO2 ratio."""
+"""Predict the CO2 ratio in [0, 1], or apply the default identity-initialized correction."""
 @inline function neural_lambda(
     theta::AbstractVector{T}, layout::NeuralCropLayout, process_lambda::T,
     daylength::T, air_temperature::T, top3_moisture::T,
@@ -312,12 +322,13 @@ end
         T(2) * clamp(top3_moisture, zero(T), one(T)) - one(T),
     )
     raw = _mlp_forward(theta, layout.lambda, inputs)[1]
+    layout.components.lambda_vcmax_direct && return _logistic(raw)
     baseline = clamp(process_lambda, zero(T), one(T))
     shifted = baseline * exp(T(0.5) * tanh(raw))
     return shifted / (one(T) - baseline + shifted)
 end
 
-"""Identity-initialized, bounded correction to the final process Vcmax."""
+"""Predict positive Vcmax in model units, or apply the default identity-initialized correction."""
 @inline function neural_vcmax(
     theta::AbstractVector{T}, layout::NeuralCropLayout, process_vcmax::T,
     daylength::T, apar::T, leaf_nitrogen::T, air_temperature::T,
@@ -329,6 +340,9 @@ end
         _signed_scale(air_temperature, T(25)),
     )
     raw = _mlp_forward(theta, layout.vcmax, inputs)[1]
+    if layout.components.lambda_vcmax_direct
+        return max(raw, zero(T)) + log1p(exp(-abs(raw)))
+    end
     return max(process_vcmax, zero(T)) * (one(T) + tanh(raw))
 end
 

@@ -226,13 +226,28 @@ function _daily_crop!(
             cftparameters, pet, state, dailyWeather.temp;
             photoparams = photo_params,
         )
-        photosynthesis!(
-            pathway, cftparameters, state, crop_canopy_auxiliary(state).apar,
-            pet.daylength, dailyWeather.temp, current_co2;
-            comp_vcmax = true,
-            lpjmlparams = global_params,
-            photoparams = photo_params,
-        )
+        daily_neural_controls = neural_enabled && neural_layout.components.lambda_vcmax_once_daily
+        if daily_neural_controls
+            neural_final_photosynthesis_controls!(
+                neural_parameters, neural_layout, state, pet.daylength,
+                dailyWeather.temp, soil_properties(state).layer_depth,
+            )
+            photosynthesis!(
+                pathway, cftparameters, state, crop_canopy_auxiliary(state).apar,
+                pet.daylength, dailyWeather.temp, current_co2;
+                comp_vcmax = false,
+                lpjmlparams = global_params,
+                photoparams = photo_params,
+            )
+        else
+            photosynthesis!(
+                pathway, cftparameters, state, crop_canopy_auxiliary(state).apar,
+                pet.daylength, dailyWeather.temp, current_co2;
+                comp_vcmax = true,
+                lpjmlparams = global_params,
+                photoparams = photo_params,
+            )
+        end
         direct_neural_gpp = neural_enabled && neural_layout.components.gpp &&
             !neural_layout.components.gpp_residual
         direct_neural_gpp && neural_gpp!(
@@ -264,7 +279,7 @@ function _daily_crop!(
                 lpjmlparams = global_params,
             )
         end
-        if !direct_neural_gpp
+        if !direct_neural_gpp && !daily_neural_controls
             solve_lambda!(
                 pathway, cftparameters, state, pet, dailyWeather.temp, current_co2;
                 lpjmlparams = global_params,
@@ -285,7 +300,7 @@ function _daily_crop!(
                 lpjmlparams = global_params,
             )
         end
-        if neural_enabled && (neural_layout.components.lambda || neural_layout.components.vcmax)
+        if neural_enabled && (neural_layout.components.lambda || neural_layout.components.vcmax) && !daily_neural_controls
             neural_final_photosynthesis_controls!(
                 neural_parameters, neural_layout, state, pet.daylength,
                 dailyWeather.temp, soil_properties(state).layer_depth,
@@ -311,7 +326,7 @@ function _daily_crop!(
                     photo_params,
                 )
             end
-        else
+        elseif !daily_neural_controls
             photosynthesis!(
                 pathway, cftparameters, state, crop_canopy_auxiliary(state).apar,
                 pet.daylength, dailyWeather.temp, current_co2;

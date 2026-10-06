@@ -5,6 +5,8 @@
     @test !components.gpp_residual
     @test !components.lambda
     @test !components.vcmax
+    @test !components.lambda_vcmax_direct
+    @test !components.lambda_vcmax_once_daily
     @test components.respiration
     @test components.transpiration
     @test !components.allocation
@@ -54,6 +56,39 @@
     @test NeuralCrop.neural_vcmax(
         control_theta, control_layout, 45.0f0, 12.0f0, 1.0f7, 4.0f0, 20.0f0,
     ) == 45.0f0
+    direct_controls = NeuralComponents(;
+        gpp = false, lambda = true, vcmax = true, lambda_vcmax_direct = true,
+        respiration = false, transpiration = false,
+    )
+    direct_layout = NeuralCropLayout(; components = direct_controls)
+    direct_theta = initialize_neural_parameters(direct_layout; T = Float32)
+    direct_lambda = NeuralCrop.neural_lambda(
+        direct_theta, direct_layout, 0.0f0, 12.0f0, 20.0f0, 0.5f0,
+    )
+    direct_vcmax = NeuralCrop.neural_vcmax(
+        direct_theta, direct_layout, 0.0f0, 12.0f0, 1.0f7, 4.0f0, 20.0f0,
+    )
+    @test direct_lambda ≈ 0.7f0
+    @test direct_vcmax ≈ 1.0f0
+    @test direct_lambda == NeuralCrop.neural_lambda(
+        direct_theta, direct_layout, 1.0f0, 12.0f0, 20.0f0, 0.5f0,
+    )
+    @test direct_vcmax == NeuralCrop.neural_vcmax(
+        direct_theta, direct_layout, 45.0f0, 12.0f0, 1.0f7, 4.0f0, 20.0f0,
+    )
+    @test neural_trainable_parameter_count(direct_layout) == 9026
+    daily_layout = NeuralCropLayout(; components = NeuralComponents(;
+        gpp = false, lambda = true, vcmax = true, lambda_vcmax_direct = true,
+        lambda_vcmax_once_daily = true, respiration = false, transpiration = false,
+    ))
+    @test daily_layout.components.lambda_vcmax_once_daily
+    @test neural_trainable_parameter_count(daily_layout) == 9026
+    @test_throws ArgumentError NeuralCropLayout(; components = NeuralComponents(;
+        gpp = false, lambda = true, vcmax = true, lambda_vcmax_once_daily = true,
+    ))
+    @test_throws ArgumentError NeuralCropLayout(;
+        components = NeuralComponents(; lambda_vcmax_direct = true),
+    )
     @test_throws ArgumentError NeuralCropLayout(;
         components = NeuralComponents(; gpp = false, gpp_residual = true),
     )

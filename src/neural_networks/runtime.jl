@@ -148,10 +148,15 @@ end
             potential_vcmax[cell] = corrected
             nitrogen_limitation[cell] = corrected > zero(T) ? one(T) : zero(T)
         end
+    elseif layout.components.lambda_vcmax_once_daily
+        lambda[cell] = zero(T)
+        vcmax[cell] = zero(T)
+        potential_vcmax[cell] = zero(T)
+        nitrogen_limitation[cell] = zero(T)
     end
 end
 
-"""Correct the final daily process controls before the final GPP calculation."""
+"""Set daily neural controls before GPP; the once-daily mode also reuses them for transpiration."""
 function neural_final_photosynthesis_controls!(
     theta::AbstractVector{T}, layout::NeuralCropLayout, state::ModelState,
     daylength, air_temperature, layer_depth,
