@@ -20,9 +20,9 @@ Select the retained NeuralCrop components. A disabled component falls back to it
 ordinary NeuralCrop process implementation, which is used for controlled
 ablation runs. GPP can be predicted directly or used as a bounded
 multiplicative correction to process GPP. The older lambda and Vcmax networks
-are retained only so archived checkpoints remain describable. Carbon
-allocation, soil decomposition, snowmelt, and soil evaporation are likewise
-retained but disabled in the current experiments.
+can alternatively correct the final daily process controls before GPP is
+recomputed. Carbon allocation, soil decomposition, snowmelt, and soil
+evaporation remain disabled in the current experiments.
 """
 Base.@kwdef struct NeuralComponents
     gpp::Bool = true
@@ -46,7 +46,7 @@ limited to the variables described in the manuscript:
 
 * GPP: day length, correctly scaled APAR, fPAR, LAI, leaf nitrogen, air
   temperature, atmospheric CO2, and mean top-three-layer soil moisture;
-* lambda and Vcmax: legacy networks retained only for archived checkpoints;
+* lambda and Vcmax: final process controls corrected after the daily solver;
 * allocation: NPP, LAI, leaf nitrogen, soil moisture, and four carbon pools;
 * decomposition: temperature and moisture;
 * respiration: GPP, leaf respiration, temperature, and crop carbon pools;
@@ -56,8 +56,8 @@ limited to the variables described in the manuscript:
 * evaporation: equilibrium PET, vegetation/wetness/cover, and top-three water.
 
 The lambda, Vcmax, allocation, decomposition, snowmelt, and soil-evaporation
-blocks are inactive by default. Their native NeuralCrop process equations are
-used in the formal experiments.
+blocks are inactive by default. The lambda and Vcmax networks are enabled
+only for the separate full-data experiment.
 """
 struct NeuralCropLayout{G, L, V, A, D, R, S, T, E, F}
     gpp::G
@@ -246,8 +246,8 @@ function initialize_neural_parameters(
     else
         _initialize_mlp!(rng, theta, layout.gpp, (log(T(0.2) / T(0.8)),))
     end
-    _initialize_mlp!(rng, theta, layout.lambda, (T(1.5),))
-    _initialize_mlp!(rng, theta, layout.vcmax, (zero(T),))
+    _initialize_mlp!(rng, theta, layout.lambda, (zero(T),); zero_output_weights = true)
+    _initialize_mlp!(rng, theta, layout.vcmax, (zero(T),); zero_output_weights = true)
     _initialize_mlp!(rng, theta, layout.allocation,
         (log(T(0.3)), log(T(0.3)), log(T(0.2)), log(T(0.2))))
     _initialize_mlp!(rng, theta, layout.decomposition, (T(-1.4),))
@@ -301,9 +301,9 @@ end
     return T(50) * _logistic(_mlp_forward(theta, layout.gpp, inputs)[1])
 end
 
-"""Neural replacement for the daily intercellular-to-ambient CO2 ratio."""
+"""Identity-initialized, bounded correction to the final process CO2 ratio."""
 @inline function neural_lambda(
-    theta::AbstractVector{T}, layout::NeuralCropLayout,
+    theta::AbstractVector{T}, layout::NeuralCropLayout, process_lambda::T,
     daylength::T, air_temperature::T, top3_moisture::T,
 ) where {T <: AbstractFloat}
     inputs = (
@@ -312,22 +312,24 @@ end
         T(2) * clamp(top3_moisture, zero(T), one(T)) - one(T),
     )
     raw = _mlp_forward(theta, layout.lambda, inputs)[1]
-    return _logistic(raw)
+    baseline = clamp(process_lambda, zero(T), one(T))
+    shifted = baseline * exp(T(0.5) * tanh(raw))
+    return shifted / (one(T) - baseline + shifted)
 end
 
-"""Neural replacement for daily maximum Rubisco capacity."""
+"""Identity-initialized, bounded correction to the final process Vcmax."""
 @inline function neural_vcmax(
-    theta::AbstractVector{T}, layout::NeuralCropLayout,
+    theta::AbstractVector{T}, layout::NeuralCropLayout, process_vcmax::T,
     daylength::T, apar::T, leaf_nitrogen::T, air_temperature::T,
 ) where {T <: AbstractFloat}
     inputs = (
         daylength / T(12) - one(T),
-        _positive_scale(apar, T(20)),
+        T(2) * _positive_scale(apar, T(1e7)) - one(T),
         _positive_scale(leaf_nitrogen, T(5)),
         _signed_scale(air_temperature, T(25)),
     )
     raw = _mlp_forward(theta, layout.vcmax, inputs)[1]
-    return T(200) * _logistic(raw)
+    return max(process_vcmax, zero(T)) * (one(T) + tanh(raw))
 end
 
 """Mass-conserving leaf/root/storage/pool fractions for the retained inactive block."""

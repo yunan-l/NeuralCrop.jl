@@ -905,15 +905,6 @@ function _neural_continuous_transition!(
                 photo_params,
             )
         end
-    elseif layout.components.vcmax
-        _neural_set_vcmax!(
-            theta,
-            layout,
-            state,
-            pet.daylength,
-            weather.temp,
-            global_params,
-        )
     else
         NeuralCrop.photosynthesis!(
             pathway,
@@ -924,26 +915,6 @@ function _neural_continuous_transition!(
             weather.temp,
             current_co2;
             comp_vcmax = true,
-            lpjmlparams = global_params,
-            photoparams = photo_params,
-        )
-    end
-    if !layout.components.gpp && layout.components.lambda
-        _neural_set_lambda!(
-            theta, layout, state, pet.daylength, weather.temp, layer_depth,
-        )
-    end
-    if !layout.components.gpp &&
-       (layout.components.vcmax || layout.components.lambda)
-        NeuralCrop.photosynthesis!(
-            pathway,
-            cft,
-            state,
-            NeuralCrop.crop_canopy_auxiliary(state).apar,
-            pet.daylength,
-            weather.temp,
-            current_co2;
-            comp_vcmax = false,
             lpjmlparams = global_params,
             photoparams = photo_params,
         )
@@ -970,8 +941,7 @@ function _neural_continuous_transition!(
             lpjmlparams = global_params,
         )
     end
-    if (!layout.components.gpp || layout.components.gpp_residual) &&
-       !layout.components.lambda
+    if !layout.components.gpp || layout.components.gpp_residual
         NeuralCrop.solve_lambda!(
             pathway,
             cft,
@@ -995,6 +965,14 @@ function _neural_continuous_transition!(
         )
         NeuralCrop.limit_vcmax_by_nitrogen!(
             state, cft, weather.temp; lpjmlparams = global_params,
+        )
+    end
+    if layout.components.lambda || layout.components.vcmax
+        nitrogen_limit_vcmax && error(
+            "final lambda/Vcmax corrections require nitrogen_limit_vcmax=false",
+        )
+        NeuralCrop.neural_final_photosynthesis_controls!(
+            theta, layout, state, pet.daylength, weather.temp, layer_depth,
         )
     end
     if layout.components.gpp

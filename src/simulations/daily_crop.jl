@@ -61,12 +61,15 @@ function _daily_crop!(
         length(neural_parameters) == neural_parameter_count(neural_layout) ||
             throw(DimensionMismatch("neural parameters do not match NeuralCrop layout"))
         components = neural_layout.components
-        (!components.lambda && !components.vcmax && !components.allocation &&
-         !components.decomposition && !components.snowmelt && !components.evaporation) ||
+        (!components.allocation && !components.decomposition &&
+         !components.snowmelt && !components.evaporation) ||
             throw(ArgumentError(
-                "the production lifecycle supports only GPP, respiration, and " *
-                "transpiration neural components",
+                "unsupported neural component in the production lifecycle",
             ))
+        components.gpp && (components.lambda || components.vcmax) &&
+            throw(ArgumentError("direct GPP and final lambda/Vcmax corrections cannot be combined"))
+        nitrogen_limit_vcmax && (components.lambda || components.vcmax) &&
+            throw(ArgumentError("final lambda/Vcmax corrections require nitrogen_limit_vcmax=false"))
     end
 
     if water_balance !== nothing && irrigation
@@ -280,6 +283,12 @@ function _daily_crop!(
             limit_vcmax_by_nitrogen!(
                 state, cftparameters, dailyWeather.temp;
                 lpjmlparams = global_params,
+            )
+        end
+        if neural_enabled && (neural_layout.components.lambda || neural_layout.components.vcmax)
+            neural_final_photosynthesis_controls!(
+                neural_parameters, neural_layout, state, pet.daylength,
+                dailyWeather.temp, soil_properties(state).layer_depth,
             )
         end
         if neural_enabled && neural_layout.components.gpp

@@ -44,6 +44,16 @@
     @test 0.0f0 <= multiplier <= 2.0f0
     @test NeuralCrop._gpp_co2_feature(40.0f0) == 0.0f0
     @test NeuralCrop._gpp_co2_feature(60.0f0) == 1.0f0
+
+    controls = NeuralComponents(; gpp = false, lambda = true, vcmax = true)
+    control_layout = NeuralCropLayout(; components = controls)
+    control_theta = initialize_neural_parameters(control_layout; T = Float32)
+    @test NeuralCrop.neural_lambda(
+        control_theta, control_layout, 0.7f0, 12.0f0, 20.0f0, 0.5f0,
+    ) == 0.7f0
+    @test NeuralCrop.neural_vcmax(
+        control_theta, control_layout, 45.0f0, 12.0f0, 1.0f7, 4.0f0, 20.0f0,
+    ) == 45.0f0
     @test_throws ArgumentError NeuralCropLayout(;
         components = NeuralComponents(; gpp = false, gpp_residual = true),
     )

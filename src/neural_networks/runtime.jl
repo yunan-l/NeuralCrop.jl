@@ -120,6 +120,64 @@ function neural_gpp!(
     return nothing
 end
 
+@kernel inbounds = true function _neural_final_photosynthesis_controls_kernel!(
+    lambda, vcmax, potential_vcmax, nitrogen_limitation, theta, fixed_layout,
+    temperature_stress, apar, leaf_nitrogen, is_growing, daylength,
+    air_temperature, storage, fixed_layer_depth,
+)
+    cell = @index(Global, Linear)
+    T = eltype(lambda)
+    layout = kernel_value(fixed_layout)
+    active = is_growing[cell] == 1 && temperature_stress[cell] >= T(1e-2) &&
+        daylength[cell] > zero(T) && apar[cell] > zero(T)
+    if active
+        if layout.components.lambda
+            lambda[cell] = neural_lambda(
+                theta, layout, T(lambda[cell]), T(daylength[cell]),
+                T(air_temperature[cell]), _neural_top3_water_fraction(
+                    storage, kernel_value(fixed_layer_depth), cell,
+                ),
+            )
+        end
+        if layout.components.vcmax
+            corrected = neural_vcmax(
+                theta, layout, T(vcmax[cell]), T(daylength[cell]), T(apar[cell]),
+                T(leaf_nitrogen[cell]), T(air_temperature[cell]),
+            )
+            vcmax[cell] = corrected
+            potential_vcmax[cell] = corrected
+            nitrogen_limitation[cell] = corrected > zero(T) ? one(T) : zero(T)
+        end
+    end
+end
+
+"""Correct the final daily process controls before the final GPP calculation."""
+function neural_final_photosynthesis_controls!(
+    theta::AbstractVector{T}, layout::NeuralCropLayout, state::ModelState,
+    daylength, air_temperature, layer_depth,
+) where {T <: AbstractFloat}
+    photosynthesis = crop_photosynthesis_auxiliary(state)
+    crop = crop_prognostic(state)
+    launch_1D!(
+        _neural_final_photosynthesis_controls_kernel!,
+        photosynthesis.lambda,
+        photosynthesis.vcmax,
+        photosynthesis.potential_vcmax,
+        photosynthesis.nitrogen_limitation,
+        theta,
+        kernel_constant(theta, layout),
+        photosynthesis.temperature_stress,
+        crop_canopy_auxiliary(state).apar,
+        crop.nitrogen.leaf,
+        crop.phenology.is_growing,
+        daylength,
+        air_temperature,
+        soil_water_prognostic(state).storage,
+        kernel_constant(theta, layer_depth),
+    )
+    return nothing
+end
+
 @kernel inbounds = true function _neural_transpiration_kernel!(
     canopy_conductance,
     theta,
