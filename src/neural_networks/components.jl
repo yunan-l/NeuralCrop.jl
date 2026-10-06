@@ -148,6 +148,10 @@ end
 @inline _positive_scale(value::T, scale::T) where {T <: AbstractFloat} =
     max(value, zero(T)) / (max(value, zero(T)) + scale)
 
+# readclimate! converts atmospheric CO₂ from ppm to Pa (400 ppm ≈ 40 Pa).
+@inline _gpp_co2_feature(co2_pa::T) where {T <: AbstractFloat} =
+    clamp((co2_pa - T(40)) / T(20), -one(T), one(T))
+
 @inline _logistic(value::T) where {T <: AbstractFloat} =
     value >= zero(T) ? inv(one(T) + exp(-value)) : exp(value) / (one(T) + exp(value))
 
@@ -272,7 +276,7 @@ end
         T(2) * _positive_scale(lai, T(5)) - one(T),
         T(2) * _positive_scale(leaf_nitrogen, T(5)) - one(T),
         _signed_scale(air_temperature, T(25)),
-        clamp((co2 - T(400)) / T(200), -one(T), one(T)),
+        _gpp_co2_feature(co2),
         T(2) * clamp(top3_moisture, zero(T), one(T)) - one(T),
     )
     return one(T) + tanh(_mlp_forward(theta, layout.gpp, inputs)[1])
@@ -291,7 +295,7 @@ end
         T(2) * _positive_scale(lai, T(5)) - one(T),
         T(2) * _positive_scale(leaf_nitrogen, T(5)) - one(T),
         _signed_scale(air_temperature, T(25)),
-        clamp((co2 - T(400)) / T(200), -one(T), one(T)),
+        _gpp_co2_feature(co2),
         T(2) * clamp(top3_moisture, zero(T), one(T)) - one(T),
     )
     return T(50) * _logistic(_mlp_forward(theta, layout.gpp, inputs)[1])

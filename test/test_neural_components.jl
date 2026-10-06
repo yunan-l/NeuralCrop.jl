@@ -19,7 +19,7 @@
     theta = initialize_neural_parameters(layout; T = Float32, seed = 20260921)
     gpp = neural_gpp(
         theta, layout, 12.0f0, 1.0f7, 0.7f0, 3.0f0, 4.0f0,
-        20.0f0, 410.0f0, 0.6f0,
+        20.0f0, 41.0f0, 0.6f0,
     )
     @test 0.0f0 < gpp < 50.0f0
     @test neural_crop_respiration_multiplier(
@@ -38,10 +38,12 @@
     )
     multiplier = neural_gpp_multiplier(
         residual_theta, residual_layout, 12.0f0, 1.0f7, 0.7f0, 3.0f0,
-        4.0f0, 20.0f0, 410.0f0, 0.6f0,
+        4.0f0, 20.0f0, 41.0f0, 0.6f0,
     )
     @test multiplier == 1.0f0
     @test 0.0f0 <= multiplier <= 2.0f0
+    @test NeuralCrop._gpp_co2_feature(40.0f0) == 0.0f0
+    @test NeuralCrop._gpp_co2_feature(60.0f0) == 1.0f0
     @test_throws ArgumentError NeuralCropLayout(;
         components = NeuralComponents(; gpp = false, gpp_residual = true),
     )
