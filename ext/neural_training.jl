@@ -1006,6 +1006,9 @@ function _neural_continuous_transition!(
                 lpjmlparams = global_params,
                 photoparams = photo_params,
             )
+            if layout.components.gpp_residual
+                isnothing(photosynthesis_input_hook) || photosynthesis_input_hook(state)
+            end
             _neural_set_gpp!(
                 theta,
                 layout,

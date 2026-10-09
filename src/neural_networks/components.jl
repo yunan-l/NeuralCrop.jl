@@ -19,7 +19,9 @@ end
 Select the retained NeuralCrop components. A disabled component falls back to its
 ordinary NeuralCrop process implementation, which is used for controlled
 ablation runs. GPP can be predicted directly or used as a bounded
-multiplicative correction to process GPP. The older lambda and Vcmax networks
+multiplicative correction to process GPP. `gpp_residual_scale` sets the lower
+deviation from one; `gpp_residual_upper_scale` defaults to the same value and
+can independently set the upper deviation. The older lambda and Vcmax networks
 can alternatively correct or directly predict the final daily controls before
 GPP is recomputed. Carbon allocation, soil decomposition, snowmelt, and soil
 evaporation remain disabled in the current experiments.
@@ -27,6 +29,8 @@ evaporation remain disabled in the current experiments.
 Base.@kwdef struct NeuralComponents
     gpp::Bool = true
     gpp_residual::Bool = false
+    gpp_residual_scale::Float64 = 1.0
+    gpp_residual_upper_scale::Float64 = gpp_residual_scale
     lambda::Bool = false
     vcmax::Bool = false
     lambda_vcmax_direct::Bool = false
@@ -84,6 +88,14 @@ function NeuralCropLayout(;
     ))
     components.gpp_residual && !components.gpp && throw(ArgumentError(
         "gpp_residual requires the GPP network to be enabled",
+    ))
+    (isfinite(components.gpp_residual_scale) &&
+     0.0 < components.gpp_residual_scale <= 1.0) || throw(ArgumentError(
+        "gpp_residual_scale must be finite and in (0, 1]",
+    ))
+    (isfinite(components.gpp_residual_upper_scale) &&
+     0.0 < components.gpp_residual_upper_scale <= 1.0) || throw(ArgumentError(
+        "gpp_residual_upper_scale must be finite and in (0, 1]",
     ))
     components.lambda_vcmax_direct && !(components.lambda || components.vcmax) &&
         throw(ArgumentError("lambda_vcmax_direct requires a lambda or Vcmax network"))
@@ -273,7 +285,18 @@ function initialize_neural_parameters(
     return theta
 end
 
-"""Bounded multiplicative correction to process GPP in the interval `[0, 2]`."""
+@inline function _gpp_residual_multiplier(
+    output::T, lower_scale::T, upper_scale::T,
+) where {T <: AbstractFloat}
+    residual = tanh(output)
+    # Preserve the existing symmetric correction bit-for-bit.
+    lower_scale == upper_scale && return one(T) + lower_scale * residual
+    # Smooth asymmetric bounds, with multiplier exactly one at zero output.
+    return one(T) + T(2) * lower_scale * upper_scale * residual /
+           (lower_scale + upper_scale + (lower_scale - upper_scale) * residual)
+end
+
+"""Correct GPP within `[1 - lower_scale, 1 + upper_scale]`, initialized at one."""
 @inline function neural_gpp_multiplier(
     theta::AbstractVector{T}, layout::NeuralCropLayout,
     daylength::T, apar::T, fpar::T, lai::T, leaf_nitrogen::T,
@@ -289,7 +312,11 @@ end
         _gpp_co2_feature(co2),
         T(2) * clamp(top3_moisture, zero(T), one(T)) - one(T),
     )
-    return one(T) + tanh(_mlp_forward(theta, layout.gpp, inputs)[1])
+    return _gpp_residual_multiplier(
+        _mlp_forward(theta, layout.gpp, inputs)[1],
+        T(layout.components.gpp_residual_scale),
+        T(layout.components.gpp_residual_upper_scale),
+    )
 end
 
 """Direct neural prediction of daily crop GPP in g C m^-2 day^-1."""

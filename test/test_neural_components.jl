@@ -3,6 +3,8 @@
 
     @test components.gpp
     @test !components.gpp_residual
+    @test components.gpp_residual_scale == 1.0
+    @test components.gpp_residual_upper_scale == 1.0
     @test !components.lambda
     @test !components.vcmax
     @test !components.lambda_vcmax_direct
@@ -44,6 +46,54 @@
     )
     @test multiplier == 1.0f0
     @test 0.0f0 <= multiplier <= 2.0f0
+    bounded_layout = NeuralCropLayout(; components = NeuralComponents(;
+        gpp_residual = true, gpp_residual_scale = 0.5,
+        respiration = false, transpiration = false,
+    ))
+    bounded_theta = initialize_neural_parameters(
+        bounded_layout; T = Float32, seed = 20260921,
+    )
+    @test neural_trainable_parameter_count(bounded_layout) == 4801
+    @test bounded_layout.components.gpp_residual_upper_scale == 0.5
+    for (bias, expected) in ((0.0f0, 1.0f0), (-100.0f0, 0.5f0), (100.0f0, 1.5f0))
+        bounded_theta[last(neural_parameter_ranges(bounded_layout).gpp)] = bias
+        bounded_multiplier = neural_gpp_multiplier(
+            bounded_theta, bounded_layout, 12.0f0, 1.0f7, 0.7f0, 3.0f0,
+            4.0f0, 20.0f0, 41.0f0, 0.6f0,
+        )
+        @test bounded_multiplier == expected
+        @test 0.5f0 <= bounded_multiplier <= 1.5f0
+    end
+    for scale in (0.0, -0.5, 1.5, NaN, Inf)
+        @test_throws ArgumentError NeuralCropLayout(; components = NeuralComponents(;
+            gpp_residual = true, gpp_residual_scale = scale,
+        ))
+    end
+    wider_layout = NeuralCropLayout(; components = NeuralComponents(;
+        gpp_residual = true, gpp_residual_scale = 0.5,
+        gpp_residual_upper_scale = 1.0, respiration = false, transpiration = false,
+    ))
+    wider_theta = initialize_neural_parameters(wider_layout; T = Float32, seed = 20260921)
+    @test neural_trainable_parameter_count(wider_layout) == 4801
+    for (bias, expected) in ((0.0f0, 1.0f0), (-100.0f0, 0.5f0), (100.0f0, 2.0f0))
+        wider_theta[last(neural_parameter_ranges(wider_layout).gpp)] = bias
+        @test neural_gpp_multiplier(
+            wider_theta, wider_layout, 12.0f0, 1.0f7, 0.7f0, 3.0f0,
+            4.0f0, 20.0f0, 41.0f0, 0.6f0,
+        ) == expected
+    end
+    for output in range(-10.0f0, 10.0f0; length = 101)
+        @test 0.5f0 <= NeuralCrop._gpp_residual_multiplier(output, 0.5f0, 1.0f0) <= 2.0f0
+        @test NeuralCrop._gpp_residual_multiplier(output, 0.5f0, 0.5f0) ==
+            1.0f0 + 0.5f0 * tanh(output)
+    end
+    @test NeuralCrop._gpp_residual_multiplier(1.0f-4, 0.5f0, 1.0f0) >
+        NeuralCrop._gpp_residual_multiplier(-1.0f-4, 0.5f0, 1.0f0)
+    for scale in (0.0, -0.5, 1.5, NaN, Inf)
+        @test_throws ArgumentError NeuralCropLayout(; components = NeuralComponents(;
+            gpp_residual = true, gpp_residual_upper_scale = scale,
+        ))
+    end
     @test NeuralCrop._gpp_co2_feature(40.0f0) == 0.0f0
     @test NeuralCrop._gpp_co2_feature(60.0f0) == 1.0f0
 
