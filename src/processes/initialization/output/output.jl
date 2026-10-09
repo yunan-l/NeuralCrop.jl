@@ -12,6 +12,8 @@ mutable struct CropOutput{A, I, M}
     storage_carbon::A      # Carbon in the harvestable storage organ (gC m⁻²).
     yield::A               # Annual harvested storage-organ carbon (gC m⁻² yr⁻¹).
     season_gpp::A          # Harvest-season cumulative gross primary production (gC m⁻²).
+    season_crop_respiration::A # Harvest-season cumulative crop respiration (gC m⁻²).
+    season_transpiration::A # Harvest-season cumulative crop transpiration (mm).
     season_ecosystem_respiration::A # Harvest-season cumulative ecosystem respiration (gC m⁻²).
     season_lai_days::A     # Harvest-season cumulative LAI (m² leaf m⁻² ground day).
     season_length::A       # Active crop days from sowing through the day before harvest (day).
@@ -60,6 +62,8 @@ mutable struct AnnualOutputAccumulator{A, I}
     yield::A        # Harvested storage carbon accumulated in the current output year (gC m⁻²).
     harvest_date::I # Latest harvest day in the current output year (1–365; 0 if absent).
     season_gpp::A
+    season_crop_respiration::A
+    season_transpiration::A
     season_ecosystem_respiration::A
     season_lai_days::A
     season_length::A
@@ -67,6 +71,8 @@ mutable struct AnnualOutputAccumulator{A, I}
     season_evapotranspiration::A
     harvest_aboveground_carbon::A
     active_gpp::A
+    active_crop_respiration::A
+    active_transpiration::A
     active_ecosystem_respiration::A
     active_lai_days::A
     active_length::A
@@ -98,6 +104,8 @@ const _DAILY_CALENDAR_INTEGER_OUTPUT_FIELDS = (
 const _ANNUAL_CROP_FLOAT_OUTPUT_FIELDS = (
     :yield,
     :season_gpp,
+    :season_crop_respiration,
+    :season_transpiration,
     :season_ecosystem_respiration,
     :season_lai_days,
     :season_length,
@@ -125,7 +133,7 @@ function init_output(::Type{T},
         scalar_output(), scalar_output(), scalar_output(), scalar_output(),
         scalar_output(), scalar_output(), scalar_output(), scalar_output(),
         scalar_output(), scalar_output(), scalar_output(), scalar_output(),
-        scalar_output(), scalar_output(),
+        scalar_output(), scalar_output(), scalar_output(), scalar_output(),
         device(zeros(T, 0, vegc_pools * cell_size)),
         device(zeros(T, 0, vegc_pools * cell_size)),
         scalar_output(), scalar_output(), integer_output(),
@@ -149,13 +157,24 @@ function init_output(::Type{T},
         integer_output(), integer_output(),
     )
     annual = AnnualOutputAccumulator(
-        device(zeros(T, cell_size)), device(zeros(Int32, cell_size)),
-        device(zeros(T, cell_size)), device(zeros(T, cell_size)),
-        device(zeros(T, cell_size)), device(zeros(T, cell_size)),
-        device(zeros(T, cell_size)), device(zeros(T, cell_size)),
-        device(zeros(T, cell_size)), device(zeros(T, cell_size)),
-        device(zeros(T, cell_size)), device(zeros(T, cell_size)),
-        device(zeros(T, cell_size)), device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(Int32, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
+        device(zeros(T, cell_size)),
         device(zeros(T, cell_size)),
     )
     return Output(crop, soil, climate, calendar, annual)
@@ -304,6 +323,8 @@ function accumulate_season_process_diagnostics!(output::Output, crop, soil)
     kernel = accumulate_season_process_diagnostics_kernel!(backend)
     kernel(
         output.annual.active_gpp,
+        output.annual.active_crop_respiration,
+        output.annual.active_transpiration,
         output.annual.active_ecosystem_respiration,
         output.annual.active_lai_days,
         output.annual.active_length,
@@ -329,6 +350,8 @@ end
 
 @kernel inbounds = true function accumulate_season_process_diagnostics_kernel!(
     active_gpp::AbstractVector{T},
+    active_crop_respiration::AbstractVector{T},
+    active_transpiration::AbstractVector{T},
     active_ecosystem_respiration::AbstractVector{T},
     active_lai_days::AbstractVector{T},
     active_length::AbstractVector{T},
@@ -351,6 +374,8 @@ end
     cell = @index(Global)
     if sowing_event[cell] != 0
         active_gpp[cell] = zero(T)
+        active_crop_respiration[cell] = zero(T)
+        active_transpiration[cell] = zero(T)
         active_ecosystem_respiration[cell] = zero(T)
         active_lai_days[cell] = zero(T)
         active_length[cell] = zero(T)
@@ -359,15 +384,20 @@ end
     end
     if is_growing[cell] != 0
         active_gpp[cell] += gross_assimilation[cell]
+        active_crop_respiration[cell] += plant_respiration[cell]
         active_ecosystem_respiration[cell] += plant_respiration[cell] +
             leaf_respiration[cell] + heterotrophic_respiration[cell]
         active_lai_days[cell] += actual_lai[cell]
         active_length[cell] += one(T)
         active_water_deficit[cell] += water_deficit[cell]
+        total_transpiration = zero(T)
         total_et = interception[cell] + litter_evaporation[cell]
         for layer in 1:layers
-            total_et += transpiration_layer[layer, cell] + soil_evaporation[layer, cell]
+            transpiration = transpiration_layer[layer, cell]
+            total_transpiration += transpiration
+            total_et += transpiration + soil_evaporation[layer, cell]
         end
+        active_transpiration[cell] += total_transpiration
         active_evapotranspiration[cell] += total_et
     end
 end

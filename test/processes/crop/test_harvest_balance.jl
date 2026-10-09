@@ -72,6 +72,8 @@ end
     NeuralCrop.accumulate_season_process_diagnostics!(output, state, state)
 
     @test output.annual.active_gpp[1] == 8.0f0
+    @test output.annual.active_crop_respiration[1] == 2.0f0
+    @test output.annual.active_transpiration[1] ≈ 1.0f0
     @test output.annual.active_ecosystem_respiration[1] == 3.0f0
     @test output.annual.active_lai_days[1] == 4.0f0
     @test output.annual.active_length[1] == 2.0f0
@@ -88,6 +90,8 @@ end
 
     @test output.crop.yield[1, 1] == 5.0f0
     @test output.crop.season_gpp[1, 1] == 8.0f0
+    @test output.crop.season_crop_respiration[1, 1] == 2.0f0
+    @test output.crop.season_transpiration[1, 1] ≈ 1.0f0
     @test output.crop.season_ecosystem_respiration[1, 1] == 3.0f0
     @test output.crop.season_lai_days[1, 1] == 4.0f0
     @test output.crop.season_length[1, 1] == 2.0f0

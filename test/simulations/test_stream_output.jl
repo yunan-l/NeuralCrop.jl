@@ -127,6 +127,8 @@ end
             OutputVariable(:crop, :npp; reduction = :sum),
             OutputVariable(:crop, :yield),
             OutputVariable(:crop, :season_gpp),
+            OutputVariable(:crop, :season_crop_respiration),
+            OutputVariable(:crop, :season_transpiration),
             OutputVariable(:crop, :season_ecosystem_respiration),
             OutputVariable(:crop, :season_lai_days),
             OutputVariable(:crop, :season_length),
@@ -143,6 +145,8 @@ end
     output.crop.npp .= 1
     output.crop.yield .= reshape(Float32[10, 20], 1, :)
     output.crop.season_gpp .= reshape(Float32[11, 21], 1, :)
+    output.crop.season_crop_respiration .= reshape(Float32[18, 28], 1, :)
+    output.crop.season_transpiration .= reshape(Float32[19, 29], 1, :)
     output.crop.season_ecosystem_respiration .= reshape(Float32[17, 27], 1, :)
     output.crop.season_lai_days .= reshape(Float32[12, 22], 1, :)
     output.crop.season_length .= reshape(Float32[13, 23], 1, :)
@@ -156,6 +160,10 @@ end
     @test annual_chunks[1].values[:crop_npp] == fill(365.0f0, 1, 2)
     @test annual_chunks[1].values[:crop_yield] == reshape(Float32[10, 20], 1, :)
     @test annual_chunks[1].values[:crop_season_gpp] == reshape(Float32[11, 21], 1, :)
+    @test annual_chunks[1].values[:crop_season_crop_respiration] ==
+        reshape(Float32[18, 28], 1, :)
+    @test annual_chunks[1].values[:crop_season_transpiration] ==
+        reshape(Float32[19, 29], 1, :)
     @test annual_chunks[1].values[:crop_season_ecosystem_respiration] ==
         reshape(Float32[17, 27], 1, :)
     @test annual_chunks[1].values[:crop_season_lai_days] == reshape(Float32[12, 22], 1, :)
